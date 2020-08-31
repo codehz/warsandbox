@@ -48,11 +48,28 @@ pub fn Engine(comptime MapType: type) type {
         }
 
         pub fn initSystem(self: *@This()) !void {
+            self.scheduler.add(GenPhysicsUpdater(@This()), self);
             self.scheduler.add(positionUpdater, self.registry);
         }
 
         pub fn update(self: *@This()) void {
             self.scheduler.update();
+        }
+    };
+}
+
+fn GenPhysicsUpdater(comptime E: type) type {
+    return struct {
+        fn updater(proc: *Process, engine: *E) void {
+            defer proc.dead = true;
+
+            var view = engine.registry.view(.{ C.Position, C.Velocity, C.Physics });
+            var iter = view.iterator();
+            while (iter.next()) |e| {
+                var vel = view.get(C.Velocity, e);
+                const phys = view.get(C.Physics, e);
+                vel.z -= phys.gravity;
+            }
         }
     };
 }
