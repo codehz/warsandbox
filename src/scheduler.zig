@@ -14,6 +14,9 @@ pub const Process = struct {
     }
 
     pub fn create(allocator: *std.mem.Allocator, comptime f: anytype, args: anytype) !*@This() {
+        comptime {
+            std.testing.expect(@TypeOf(f) == .Function);
+        }
         var ret = try allocator.create(Bundle(@Frame(f)));
         ret.data.allocator = allocator;
         ret.data.stopsignal = false;
