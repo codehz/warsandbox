@@ -48,7 +48,7 @@ pub fn Engine(comptime MapType: type) type {
         }
 
         pub fn initSystem(self: *@This()) !void {
-            self.scheduler.add(GenPhysicsUpdater(@This()), self);
+            self.scheduler.add(GenPhysicsUpdater(@This()).updater, self);
             self.scheduler.add(positionUpdater, self.registry);
         }
 
