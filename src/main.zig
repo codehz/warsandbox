@@ -65,8 +65,13 @@ var registry: ecs.Registry = undefined;
 var player: ecs.Entity = undefined;
 var engine: Engine(TestingMap) = undefined;
 
-export fn initEngine() void {
+export fn initEngine() bool {
     engine = Engine(TestingMap).init(std.heap.page_allocator, &testingMap);
+    engine.initSystem() catch {
+        engine.deinit();
+        return false;
+    };
+    return true;
 }
 
 export fn deinitEngine() void {

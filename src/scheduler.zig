@@ -13,15 +13,12 @@ pub const Process = struct {
         };
     }
 
-    pub fn create(allocator: *std.mem.Allocator, comptime f: anytype, args: anytype) !*@This() {
-        comptime {
-            std.testing.expect(@TypeOf(f) == .Function);
-        }
+    pub fn create(allocator: *std.mem.Allocator, comptime f: anytype, self: anytype) !*@This() {
         var ret = try allocator.create(Bundle(@Frame(f)));
         ret.data.allocator = allocator;
         ret.data.stopsignal = false;
         ret.data.dead = false;
-        ret.frame = async f(&ret.data, args);
+        ret.frame = async f(self, &ret.data);
         return &ret.data;
     }
 

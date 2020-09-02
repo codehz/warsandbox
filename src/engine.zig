@@ -7,7 +7,7 @@ usingnamespace @import("./scheduler.zig");
 pub const PlayerInitData = struct {
     pos: C.Position,
     faced: C.Faced = .{ .yaw = 0, .pitch = 0 },
-    phys: C.Physics = .{ .gravity = 0.01 },
+    phys: C.Gravity = .{ .value = 0.01 },
     health: C.Health = .{ .max = 100, .value = 100 },
     energy: C.Energy = .{ .max = 100, .value = 100 },
     label: C.Label = C.Label.init("player"),
@@ -48,42 +48,28 @@ pub fn Engine(comptime MapType: type) type {
         }
 
         pub fn initSystem(self: *@This()) !void {
-            self.scheduler.add(GenPhysicsUpdater(@This()).updater, self);
-            self.scheduler.add(positionUpdater, self.registry);
+            try self.scheduler.add(updatePosition, self);
         }
 
         pub fn update(self: *@This()) void {
             self.scheduler.update();
         }
-    };
-}
 
-fn GenPhysicsUpdater(comptime E: type) type {
-    return struct {
-        fn updater(proc: *Process, engine: *E) void {
+        fn updatePosition(self: *@This(), proc: *Process) void {
             defer proc.dead = true;
 
-            var view = engine.registry.view(.{ C.Position, C.Velocity, C.Physics });
-            var iter = view.iterator();
-            while (iter.next()) |e| {
-                var vel = view.get(C.Velocity, e);
-                const phys = view.get(C.Physics, e);
-                vel.z -= phys.gravity;
+            var group = self.registry.group(.{ C.Position, C.Velocity }, .{}, .{});
+            while (true) {
+                suspend;
+                if (proc.stopsignal) return;
+                var iter = group.iterator(struct { pos: *C.Position, vel: *C.Velocity });
+
+                while (iter.next()) |e| {
+                    e.pos.x += e.vel.x;
+                    e.pos.y += e.vel.y;
+                    e.pos.z += e.vel.z;
+                }
             }
         }
     };
-}
-
-fn positionUpdater(proc: *Process, reg: Registry) void {
-    defer proc.dead = true;
-
-    var view = reg.view(.{ C.Position, C.Velocity }, .{});
-    var iter = view.iterator();
-    while (iter.next()) |e| {
-        var pos = view.get(C.Position, e);
-        const vel = view.getConst(C.Velocity, e);
-        pos.x += vel.x;
-        pos.y += vel.y;
-        pos.z += vel.z;
-    }
 }
