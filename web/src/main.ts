@@ -22,7 +22,7 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     const mod = await utils.fetchModule("/native/engine.wasm", {});
     mod.loadSampleMap();
 
-    mod.initRegistry();
+    if (!mod.initEngine()) throw new Error("failed to init engine");
     mod.initPlayer();
 
     mod.tick();
@@ -66,3 +66,4 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     // adjust();
     // renderer.render(scene, camera);
 }
+

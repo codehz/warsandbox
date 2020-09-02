@@ -2,8 +2,8 @@ declare interface WasmExport {
     memory: WebAssembly.Memory;
     mapInfo: number;
     cameraInfo: number;
-    initRegistry(): void;
-    deinitRegistry(): void;
+    initEngine(): boolean;
+    deinitEngine(): void;
     initPlayer(): void;
     tick(): void;
     loadSampleMap(): void;

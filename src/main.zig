@@ -83,7 +83,7 @@ export fn initPlayer() void {
         .pos = .{
             .x = 0,
             .y = 0,
-            .z = 32,
+            .z = 64,
         },
     });
 }

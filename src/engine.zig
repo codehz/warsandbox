@@ -2,7 +2,7 @@ const std = @import("std");
 const C = @import("./components.zig");
 usingnamespace @import("./ecs/ecs.zig");
 usingnamespace @import("./utils.zig");
-usingnamespace @import("./scheduler.zig");
+usingnamespace @import("./updater.zig");
 
 pub const PlayerInitData = struct {
     pos: C.Position,
@@ -18,14 +18,14 @@ pub fn Engine(comptime MapType: type) type {
         allocator: *std.mem.Allocator,
         map: *MapType,
         registry: Registry,
-        scheduler: Scheduler,
+        updater: UpdateManager,
 
         pub fn init(allocator: *std.mem.Allocator, map: *MapType) @This() {
             return .{
                 .allocator = allocator,
                 .map = map,
                 .registry = Registry.init(allocator),
-                .scheduler = Scheduler.init(allocator),
+                .updater = UpdateManager.init(allocator),
             };
         }
 
@@ -48,26 +48,28 @@ pub fn Engine(comptime MapType: type) type {
         }
 
         pub fn initSystem(self: *@This()) !void {
-            try self.scheduler.add(updatePosition, self);
+            try self.updater.addFn(updatePosition, self);
         }
 
         pub fn update(self: *@This()) void {
-            self.scheduler.update();
+            self.updater.update();
         }
 
-        fn updatePosition(self: *@This(), proc: *Process) void {
-            defer proc.dead = true;
-
+        fn updatePosition(self: *@This(), flag: *bool) void {
             var group = self.registry.group(.{ C.Position, C.Velocity }, .{}, .{});
             while (true) {
                 suspend;
-                if (proc.stopsignal) return;
+                if (flag.*) break;
                 var iter = group.iterator(struct { pos: *C.Position, vel: *C.Velocity });
 
-                while (iter.next()) |e| {
-                    e.pos.x += e.vel.x;
-                    e.pos.y += e.vel.y;
-                    e.pos.z += e.vel.z;
+                while (iter.next()) |str| {
+                    const e = iter.entity();
+                    if (self.registry.tryGet(C.Gravity, e)) |g| {
+                        str.vel.z += g.value;
+                    }
+                    str.pos.x += str.vel.x;
+                    str.pos.y += str.vel.y;
+                    str.pos.z += str.vel.z;
                 }
             }
         }
