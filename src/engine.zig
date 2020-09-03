@@ -65,7 +65,7 @@ pub fn Engine(comptime MapType: type) type {
                 while (iter.next()) |str| {
                     const e = iter.entity();
                     if (self.registry.tryGet(C.Gravity, e)) |g| {
-                        str.vel.z += g.value;
+                        str.vel.z -= g.value;
                     }
                     str.pos.x += str.vel.x;
                     str.pos.y += str.vel.y;
