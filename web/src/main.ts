@@ -19,26 +19,32 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     testtex.map.magFilter = THREE.NearestFilter;
     await waitForLoadingManager(loadingManager);
 
+    console.time("init");
+
     const mod = await utils.fetchModule("/native/engine.wasm", {});
+    const mapInfo = utils.readMapInfo(mod.mapInfo);
+    console.log(mapInfo);
+    console.timeLog("init", "fetch");
     mod.loadSampleMap();
+    console.timeLog("init", "load map");
 
-    if (!mod.initEngine()) throw new Error("failed to init engine");
+    mod.initEngine();
+    console.timeLog("init", "init engine");
     mod.initPlayer();
+    console.timeLog("init", "init player");
 
-    mod.tick();
+    // mod.tick();
+    console.timeEnd("init");
 
+    console.time("geo");
     for (let i = 0; i < 16; i++) {
         for (let j = 0; j < 4; j++) {
             const addr = mod.generateGeomentryDataForChunk(i, j);
-            const dataCount = utils.readUint32(addr);
-            const dataOffset = utils.readUint32(addr + 4);
-            const indicesCount = utils.readUint32(addr + 8);
-            const indicesOffset = utils.readUint32(addr + 12);
-            const buffer = utils.getFloat32BufferFromSlice(addr + dataOffset, dataCount * 4);
-            const interleaveBuffer = new THREE.InterleavedBuffer(buffer, 8);
-            const indexBuffer = utils.getUint32BufferFromSlice(addr + indicesOffset, indicesCount * 4);
+            const exported = utils.readExported(mapInfo, addr);
+            const interleaveBuffer = exported.data.proxy(new THREE.InterleavedBuffer(exported.data.data, 8));
             const test = new THREE.BufferGeometry();
-            test.setIndex(new THREE.BufferAttribute(indexBuffer, 1));
+            const indexBuffer = exported.indices.proxy(new THREE.BufferAttribute(exported.indices.data, 1));
+            test.setIndex(indexBuffer);
             test.setAttribute("position", new THREE.InterleavedBufferAttribute(interleaveBuffer, 3, 0));
             test.setAttribute("normal", new THREE.InterleavedBufferAttribute(interleaveBuffer, 3, 3));
             test.setAttribute("uv", new THREE.InterleavedBufferAttribute(interleaveBuffer, 2, 6));
@@ -49,14 +55,15 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
             scene.add(tmesh);
         }
     }
+    console.timeEnd("geo");
 
-    setInterval(() => mod.tick(), 50);
+    setInterval(() => mod.tick(), 500);
 
     renderer.setAnimationLoop(() => {
         const info = utils.readCameraInfo(mod.cameraInfo);
         camera.position.set(...info.pos);
-        let pitch = info.rot[1];
-        let yaw = info.rot[0];
+        const pitch = info.rot[1];
+        const yaw = info.rot[0];
         camera.rotation.set(Math.PI / 2 + pitch, 0, yaw, 'YZX');
         camera.matrixWorldNeedsUpdate = true;
         adjust();

@@ -19,25 +19,21 @@ const length = 16;
 const TestingMap = map.Map(chunk.Chunk(block.TestingBlock, chunkWidth, chunkHeight), width, length);
 
 const MapInfo = extern struct {
-    chunkWidth: u32 = chunkWidth,
-    chunkHeight: u32 = chunkHeight,
-    width: u32 = width,
-    length: u32 = length,
+    chunkWidth: usize = chunkWidth,
+    chunkHeight: usize = chunkHeight,
+    width: usize = width,
+    length: usize = length,
 };
 
 const ExportedPosition = extern struct {
     dataCount: u32,
-    dataOffset: u32,
     indicesCount: u32,
-    indicesOffset: u32,
     data: [chunkWidth * chunkWidth * chunkHeight * 192]f32,
     indices: [chunkWidth * chunkWidth * chunkHeight * 6 * 6]u32,
 
     fn reset(self: *@This()) void {
         self.dataCount = 0;
-        self.dataOffset = @byteOffsetOf(@This(), "data");
         self.indicesCount = 0;
-        self.indicesOffset = @byteOffsetOf(@This(), "indices");
     }
 
     fn push(self: *@This(), group: u32, arr: anytype, indices: anytype) void {
@@ -55,23 +51,48 @@ const ExportedPosition = extern struct {
 
 const CameraInfo = extern struct {
     posrot: [5]f32,
+
+    fn updateCamera(self: *@This(), stopped: *bool) void {
+        var camView = engine.registry.view(.{ C.ControlByPlayer, C.Position, C.Faced }, .{});
+        while (true) {
+            suspend;
+            if (stopped.*) return;
+            var camIter = camView.iterator();
+            if (camIter.next()) |e| {
+                const pos = engine.registry.getConst(C.Position, e);
+                const faced = engine.registry.getConst(C.Faced, e);
+                self.posrot = [_]f32{ pos.x, pos.y, pos.z, faced.yaw, faced.pitch };
+            }
+        }
+    }
 };
+
+fn report(comptime str: []const u8) noreturn {
+    std.log.err("ERROR: {}", .{str});
+    unreachable;
+}
+
+fn reportError(comptime str: []const u8, e: anytype) noreturn {
+    std.log.err("ERROR: {} {}", .{ str, e });
+    unreachable;
+}
 
 export var mapInfo: MapInfo = .{};
 export var cameraInfo: CameraInfo = undefined;
-var exported: [width * length]ExportedPosition = undefined;
+var gpa: std.heap.GeneralPurposeAllocator(.{
+    .thread_safe = false,
+}) = .{};
+export var exported: [width * length]ExportedPosition = undefined;
 var testingMap: TestingMap = undefined;
-var registry: ecs.Registry = undefined;
 var player: ecs.Entity = undefined;
 var engine: Engine(TestingMap) = undefined;
 
-export fn initEngine() bool {
-    engine = Engine(TestingMap).init(std.heap.page_allocator, &testingMap);
-    engine.initSystem() catch {
+export fn initEngine() void {
+    engine = Engine(TestingMap).init(&gpa.allocator, &testingMap);
+    engine.initSystem() catch |e| {
         engine.deinit();
-        return false;
+        reportError("Failed to init engine", e);
     };
-    return true;
 }
 
 export fn deinitEngine() void {
@@ -83,9 +104,11 @@ export fn initPlayer() void {
         .pos = .{
             .x = 0,
             .y = 0,
-            .z = 64,
+            .z = 8,
         },
     });
+
+    engine.updater.addFn(CameraInfo.updateCamera, &cameraInfo) catch report("Failed to register camera updater");
 }
 
 export fn tick() bool {

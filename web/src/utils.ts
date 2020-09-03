@@ -69,3 +69,79 @@ export function readCameraInfo(addr: number): {
         rot: [arr[3], arr[4]]
     };
 }
+
+type StdLayoutStruct<T extends string[]> = Record<T[number], number>;
+
+export function readStdLayoutStruct<T extends string[]>(addr: number, ...fields: T): StdLayoutStruct<T> {
+    let ret = {} as StdLayoutStruct<T>;
+    const buffer = getUint32BufferFromSlice(addr, 4 * fields.length);
+    for (const idx in fields) {
+        const key = fields[idx];
+        ret[key] = buffer[idx];
+    }
+    return ret;
+}
+
+export interface MapInfo {
+    chunkWidth: number,
+    chunkHeight: number,
+    width: number,
+    length: number,
+    dataOffset: number,
+    dataSize: number,
+    indicesOffset: number,
+    indicesSize: number,
+    size: number,
+};
+
+export function readMapInfo(addr: number): MapInfo {
+    const basic = readStdLayoutStruct(addr, "chunkWidth", "chunkHeight", "width", "length");
+    const dataOffset = 8;
+    const dataSize = basic.chunkWidth * basic.chunkWidth * basic.chunkHeight * 192 * 4;
+    const indicesOffset = dataOffset + dataSize;
+    const indicesSize = basic.chunkWidth * basic.chunkWidth * basic.chunkHeight * 6 * 6 * 4;
+    const size = indicesOffset + indicesOffset;
+    return Object.assign({}, basic, {
+        dataOffset,
+        dataSize,
+        indicesOffset,
+        indicesSize,
+        size
+    });
+}
+
+export class ProxiedArray<T extends ArrayLike<number>> {
+    private addr: number;
+    private countAddr: number;
+    private base: number;
+    private builder: (addr: number, len: number) => T;
+
+    constructor(addr: number, countAddr: number, base: number, builder: (addr: number, len: number) => T) {
+        this.addr = addr;
+        this.countAddr = countAddr;
+        this.base = base;
+        this.builder = builder;
+    }
+
+    get data() {
+        const len = readUint32(this.countAddr);
+        return this.builder(this.addr, len * this.base);
+    }
+
+    proxy<R extends { array: ArrayLike<number> }>(target: R): R {
+        const self = this;
+        Object.defineProperty(target, "array", {
+            get() {
+                return self.data;
+            }
+        });
+        return target;
+    }
+};
+
+export function readExported(info: MapInfo, addr: number) {
+    return {
+        data: new ProxiedArray(addr + info.dataOffset, addr, 4, getFloat32BufferFromSlice),
+        indices: new ProxiedArray(addr + info.indicesOffset, addr + 4, 4, getUint32BufferFromSlice),
+    };
+}
