@@ -3,6 +3,7 @@ declare interface WasmExport {
     mapInfo: number;
     cameraInfo: number;
     exported: number;
+    keyboard: number;
     initEngine(): void;
     deinitEngine(): void;
     initPlayer(): void;

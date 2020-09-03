@@ -1,5 +1,6 @@
 const std = @import("std");
 const C = @import("./components.zig");
+const control = @import("./control.zig");
 usingnamespace @import("./ecs/ecs.zig");
 usingnamespace @import("./utils.zig");
 usingnamespace @import("./updater.zig");
@@ -49,12 +50,37 @@ pub fn Engine(comptime MapType: type) type {
         }
 
         pub fn initSystem(self: *@This()) !void {
+            try self.updater.addFn(updateControl, self);
             try self.updater.addFn(updatePosition, self);
             try self.updater.addFn(fixCollisionWithMap, self);
         }
 
         pub fn update(self: *@This()) void {
             self.updater.update();
+        }
+
+        fn updateControl(self: *@This(), flag: *bool) void {
+            var group = self.registry.group(.{C.ControlByPlayer}, .{ C.Velocity, C.Position, C.Faced }, .{});
+            while (true) {
+                suspend;
+                if (flag.*) return;
+                // FIXME: use faced
+                var iter = group.iterator(struct { pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
+                if (iter.next()) |str| {
+                    if (control.keyboard.up) {
+                        str.vel.value[1] += 0.01;
+                    }
+                    if (control.keyboard.down) {
+                        str.vel.value[1] -= 0.01;
+                    }
+                    if (control.keyboard.left) {
+                        str.vel.value[0] -= 0.01;
+                    }
+                    if (control.keyboard.right) {
+                        str.vel.value[0] += 0.01;
+                    }
+                }
+            }
         }
 
         fn updatePosition(self: *@This(), flag: *bool) void {

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import * as utils from "./utils";
+import * as kbd from "./keyboardmanager";
 
 function waitForLoadingManager(mgr: THREE.LoadingManager) {
     return new Promise((resolve, reject) => {
@@ -70,7 +71,12 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
         renderer.render(scene, camera);
     });
 
-    // adjust();
-    // renderer.render(scene, camera);
+    const mgr = utils.getKeyboardMapper(mod.keyboard);
+
+    kbd.detect([87, 38], o => mgr.up = o);
+    kbd.detect([83, 40], o => mgr.down = o);
+    kbd.detect([65, 37], o => mgr.left = o);
+    kbd.detect([68, 39], o => mgr.right = o);
+    kbd.detect([32], o => mgr.space = o);
 }
 

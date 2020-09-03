@@ -59,6 +59,29 @@ export function getUint32BufferFromSlice(addr: number, len: number) {
     return new Uint32Array(memory.buffer, addr, len / 4);
 }
 
+class KeyboardMapper {
+    addr: number;
+    static UP = 0;
+    static DOWN = 1;
+    static LEFT = 2;
+    static RIGHT = 3;
+    static SPACE = 4;
+
+    constructor(addr: number) {
+        this.addr = addr;
+    }
+
+    get buffer() { return getUint8BufferFromSlice(this.addr, 5); }
+
+    set up(flag: boolean) { this.buffer[KeyboardMapper.UP] = flag ? 1 : 0; }
+    set down(flag: boolean) { this.buffer[KeyboardMapper.DOWN] = flag ? 1 : 0; }
+    set left(flag: boolean) { this.buffer[KeyboardMapper.LEFT] = flag ? 1 : 0; }
+    set right(flag: boolean) { this.buffer[KeyboardMapper.RIGHT] = flag ? 1 : 0; }
+    set space(flag: boolean) { this.buffer[KeyboardMapper.SPACE] = flag ? 1 : 0; }
+};
+export function getKeyboardMapper(addr: number) {
+    return new KeyboardMapper(addr);
+}
 export function readCameraInfo(addr: number): {
     pos: [number, number, number],
     rot: [number, number]
