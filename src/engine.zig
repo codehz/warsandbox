@@ -3,14 +3,15 @@ const C = @import("./components.zig");
 usingnamespace @import("./ecs/ecs.zig");
 usingnamespace @import("./utils.zig");
 usingnamespace @import("./updater.zig");
+usingnamespace @import("./math.zig");
 
 pub const PlayerInitData = struct {
     pos: C.Position,
     faced: C.Faced = .{ .yaw = 0, .pitch = 0 },
-    phys: C.Gravity = .{ .value = 0.01 },
     health: C.Health = .{ .max = 100, .value = 100 },
     energy: C.Energy = .{ .max = 100, .value = 100 },
     label: C.Label = C.Label.init("player"),
+    box: C.BoundingBox = .{ .radius = 0.5, .height = 1.9 },
 };
 
 pub fn Engine(comptime MapType: type) type {
@@ -38,9 +39,9 @@ pub fn Engine(comptime MapType: type) type {
             self.registry.add(player, C.ControlByPlayer{});
             self.registry.add(player, C.Renderable{});
             self.registry.add(player, data.pos);
-            self.registry.add(player, C.Velocity{ .x = 0, .y = 0, .z = 0 });
+            self.registry.add(player, C.Velocity{ .value = .{ 0, 0, 0 } });
             self.registry.add(player, data.faced);
-            self.registry.add(player, data.phys);
+            self.registry.add(player, data.box);
             self.registry.add(player, data.health);
             self.registry.add(player, data.energy);
             self.registry.add(player, data.label);
@@ -49,6 +50,7 @@ pub fn Engine(comptime MapType: type) type {
 
         pub fn initSystem(self: *@This()) !void {
             try self.updater.addFn(updatePosition, self);
+            try self.updater.addFn(fixCollisionWithMap, self);
         }
 
         pub fn update(self: *@This()) void {
@@ -64,12 +66,20 @@ pub fn Engine(comptime MapType: type) type {
 
                 while (iter.next()) |str| {
                     const e = iter.entity();
-                    if (self.registry.tryGet(C.Gravity, e)) |g| {
-                        str.vel.z -= g.value;
-                    }
-                    str.pos.x += str.vel.x;
-                    str.pos.y += str.vel.y;
-                    str.pos.z += str.vel.z;
+                    str.pos.* = C.Position{ .value = add3d(str.pos.value, str.vel.value) };
+                }
+            }
+        }
+
+        fn fixCollisionWithMap(self: *@This(), flag: *bool) void {
+            var group = self.registry.group(.{ C.BoundingBox }, .{ C.Position, C.Velocity }, .{});
+            while (true) {
+                suspend;
+                if (flag.*) break;
+                var iter = group.iterator(struct { box: *C.BoundingBox, pos: *C.Position });
+
+                while (iter.next()) |str| {
+                    // TODO: impl it.
                 }
             }
         }

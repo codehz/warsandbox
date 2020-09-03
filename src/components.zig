@@ -1,10 +1,11 @@
 const std = @import("std");
+usingnamespace @import("./math.zig");
 
-pub const Position = struct { x: f32, y: f32, z: f32 };
-pub const Velocity = struct { x: f32, y: f32, z: f32 };
+pub const Position = struct { value: Vector3D };
+pub const Velocity = struct { value: Vector3D };
 pub const Faced = struct { yaw: f32, pitch: f32 };
 pub const Renderable = struct {};
-pub const Gravity = struct { value: f32 };
+pub const BoundingBox = struct { radius: f32, height: f32 };
 pub const Health = struct { max: f32, value: f32 };
 pub const Energy = struct { max: f32, value: f32 };
 pub const Targetable = struct {};

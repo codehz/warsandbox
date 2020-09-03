@@ -61,7 +61,7 @@ const CameraInfo = extern struct {
             if (camIter.next()) |e| {
                 const pos = engine.registry.getConst(C.Position, e);
                 const faced = engine.registry.getConst(C.Faced, e);
-                self.posrot = [_]f32{ pos.x, pos.y, pos.z, faced.yaw, faced.pitch };
+                self.posrot = [_]f32{ pos.value[0], pos.value[1], pos.value[2], faced.yaw, faced.pitch };
             }
         }
     }
@@ -101,11 +101,7 @@ export fn deinitEngine() void {
 
 export fn initPlayer() void {
     player = engine.initPlayer(.{
-        .pos = .{
-            .x = 0,
-            .y = 0,
-            .z = 8,
-        },
+        .pos = .{ .value = .{ 0, 0, 8 } },
     });
 
     engine.updater.addFn(CameraInfo.updateCamera, &cameraInfo) catch report("Failed to register camera updater");
