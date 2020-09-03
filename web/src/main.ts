@@ -57,11 +57,11 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     }
     console.timeEnd("geo");
 
-    setInterval(() => mod.tick(), 500);
+    setInterval(() => mod.tick(), 50);
 
     renderer.setAnimationLoop(() => {
         const info = utils.readCameraInfo(mod.cameraInfo);
-        camera.position.set(...info.pos);
+        camera.position.set(info.pos[0], info.pos[1], info.pos[2] + 1.7);
         const pitch = info.rot[1];
         const yaw = info.rot[0];
         camera.rotation.set(Math.PI / 2 + pitch, 0, yaw, 'YZX');

@@ -66,20 +66,39 @@ pub fn Engine(comptime MapType: type) type {
 
                 while (iter.next()) |str| {
                     const e = iter.entity();
+                    str.vel.value[2] -= 0.01;
                     str.pos.* = C.Position{ .value = add3d(str.pos.value, str.vel.value) };
                 }
             }
         }
 
         fn fixCollisionWithMap(self: *@This(), flag: *bool) void {
-            var group = self.registry.group(.{ C.BoundingBox }, .{ C.Position, C.Velocity }, .{});
+            var group = self.registry.group(.{C.BoundingBox}, .{ C.Position, C.Velocity }, .{});
             while (true) {
                 suspend;
                 if (flag.*) break;
-                var iter = group.iterator(struct { box: *C.BoundingBox, pos: *C.Position });
+                var iter = group.iterator(struct { box: *C.BoundingBox, pos: *C.Position, vel: *C.Velocity });
 
                 while (iter.next()) |str| {
-                    // TODO: impl it.
+                    var xmin = @floatToInt(u16, str.pos.value[0] - str.box.radius - 0.5);
+                    var xmax = @floatToInt(u16, str.pos.value[0] + str.box.radius - 0.5);
+                    var ymin = @floatToInt(u16, str.pos.value[1] - str.box.radius - 0.5);
+                    var ymax = @floatToInt(u16, str.pos.value[1] + str.box.radius - 0.5);
+                    var zmin = @floatToInt(u8, str.pos.value[2] - 0.5);
+                    var zmax = @floatToInt(u8, str.pos.value[2] + str.box.height - 0.5);
+                    var center = add3d(str.pos.value, [3]f32{ 0, 0, str.box.height / 2 });
+                    while (xmin <= xmax) : (xmin += 1) {
+                        while (ymin <= ymax) : (ymin += 1) {
+                            while (zmin <= zmax) : (zmin += 1) {
+                                const isBlock = !self.map.accessBlock(xmin, ymin, zmin).*.isAir;
+                                if (isBlock) {
+                                    // TODO: use correct alg
+                                    str.pos.* = C.Position{ .value = sub3d(str.pos.value, str.vel.value) };
+                                    str.vel.value = .{ 0, 0, 0 };
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
