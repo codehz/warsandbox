@@ -113,33 +113,22 @@ pub fn Engine(comptime MapType: type) type {
                     var collided = false;
                     const dir = toDir3D(str.vel.value);
                     var idir = invertDir3D(dir);
-                    const xmin = @floatToInt(u16, str.pos.value[0] - str.box.radius);
-                    const xmax = @floatToInt(u16, str.pos.value[0] + str.box.radius);
-                    const ymin = @floatToInt(u16, str.pos.value[1] - str.box.radius);
-                    const ymax = @floatToInt(u16, str.pos.value[1] + str.box.radius);
-                    const zmin = @floatToInt(u8, str.pos.value[2]);
-                    const zmax = @floatToInt(u8, str.pos.value[2] + str.box.height);
+                    const fxmin = str.pos.value[0] - str.box.radius;
+                    const xmin = @floatToInt(u16, fxmin);
+                    const fxmax = str.pos.value[0] + str.box.radius;
+                    const xmax = @floatToInt(u16, fxmax);
+                    const fymin = str.pos.value[1] - str.box.radius;
+                    const ymin = @floatToInt(u16, fymin);
+                    const fymax = str.pos.value[1] + str.box.radius;
+                    const ymax = @floatToInt(u16, fymax);
+                    const fzmin = str.pos.value[2];
+                    const zmin = @floatToInt(u8, fzmin);
+                    const fzmax = str.pos.value[2] + str.box.height;
+                    const zmax = @floatToInt(u8, fzmax);
                     const center = add3d(str.pos.value, [3]f32{ 0, 0, str.box.height / 2 });
                     var x = xmin;
                     var y = ymin;
                     var z = zmin;
-                    std.log.info("[{d:.2}, {d:.2}, {d:.2}]<{d:.2} {d:.2}> ({}({d:.2}) {}({d:.2})) ({}({d:.2}) {}({d:.2})) ({} {})", .{
-                        str.pos.value[0],
-                        str.pos.value[1],
-                        str.pos.value[2],
-                        str.box.radius,
-                        str.box.height,
-                        xmin,
-                        str.pos.value[0] - str.box.radius,
-                        xmax,
-                        str.pos.value[0] + str.box.radius,
-                        ymin,
-                        str.pos.value[1] - str.box.radius,
-                        ymax,
-                        str.pos.value[1] + str.box.radius,
-                        zmin,
-                        zmax,
-                    });
                     while (x <= xmax) : (x += 1) {
                         y = ymin;
                         while (y <= ymax) : (y += 1) {
@@ -150,19 +139,67 @@ pub fn Engine(comptime MapType: type) type {
                                     collided = true;
                                     var fdir = idir;
                                     self.map.checkBlockFace(x, y, z, &fdir);
+                                    var lastpower = std.math.inf_f32;
+                                    var pdir: usize = 3; // invalid
                                     inline for (comptime utils.range(usize, 3)) |i| {
-                                        if (fdir[i] != 0) idir[i] = 0;
+                                        if (fdir[i] != 0) {
+                                            const p = dir[i] > 0;
+                                            const power: f32 = switch (i) {
+                                                0 => blk: {
+                                                    if (p) {
+                                                        break :blk fxmax - @intToFloat(f32, x);
+                                                    } else {
+                                                        break :blk @intToFloat(f32, x) - fxmin;
+                                                    }
+                                                },
+                                                1 => blk: {
+                                                    if (p) {
+                                                        break :blk fymax - @intToFloat(f32, y);
+                                                    } else {
+                                                        break :blk @intToFloat(f32, y) - fymin;
+                                                    }
+                                                },
+                                                2 => blk: {
+                                                    if (p) {
+                                                        break :blk fzmax - @intToFloat(f32, z);
+                                                    } else {
+                                                        break :blk @intToFloat(f32, z) - fzmin;
+                                                    }
+                                                },
+                                                else => unreachable,
+                                            };
+                                            if (lastpower > power) {
+                                                lastpower = power;
+                                                pdir = i;
+                                            }
+                                        }
                                     }
-                                    std.log.info("! {} {} {} ({} {} {})", .{ x, y, z, idir[0], idir[1], idir[2] });
+                                    std.log.info("({} {} {})last: {d:.3} pdir: {}", .{ x, y, z, lastpower, pdir });
+                                    if (lastpower <= 1) {
+                                        idir[pdir] = 0;
+                                    }
                                 }
                             }
                         }
                     }
                     if (collided) {
+                        std.log.info("! ({} {} {})", .{ idir[0], idir[1], idir[2] });
                         inline for (comptime utils.range(usize, 3)) |i| {
                             const v = str.vel.value[i];
                             if (idir[i] == 0 and dir[i] != 0) {
-                                str.pos.value[i] -= v;
+                                if (i != 2) {
+                                    if (dir[i] > 0) {
+                                        str.pos.value[i] = std.math.ceil(str.pos.value[i] - v) - str.box.radius;
+                                    } else {
+                                        str.pos.value[i] = std.math.floor(str.pos.value[i] - v) + str.box.radius;
+                                    }
+                                } else {
+                                    if (dir[i] > 0) {
+                                        str.pos.value[i] = std.math.ceil(str.pos.value[i] - v) - str.box.height;
+                                    } else {
+                                        str.pos.value[i] = std.math.floor(str.pos.value[i] - v);
+                                    }
+                                }
                                 str.vel.value[i] = 0;
                             }
                         }
