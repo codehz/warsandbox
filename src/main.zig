@@ -11,6 +11,7 @@ const console = @import("./console.zig");
 usingnamespace @import("./engine.zig");
 
 pub const log = console.zlog;
+pub const log_level = .debug;
 
 const chunkWidth = 16;
 const chunkHeight = 32;
@@ -81,6 +82,7 @@ export var mapInfo: MapInfo = .{};
 export var cameraInfo: CameraInfo = undefined;
 var gpa: std.heap.GeneralPurposeAllocator(.{
     .thread_safe = false,
+    .safety = false,
 }) = .{};
 export var exported: [width * length]ExportedPosition = undefined;
 var testingMap: TestingMap = undefined;
@@ -101,7 +103,7 @@ export fn deinitEngine() void {
 
 export fn initPlayer() void {
     player = engine.initPlayer(.{
-        .pos = .{ .value = .{ 0, 0, 8 } },
+        .pos = .{ .value = .{ 0.5, 0.5, 8 } },
     });
 
     engine.updater.addFn(CameraInfo.updateCamera, &cameraInfo) catch report("Failed to register camera updater");

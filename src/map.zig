@@ -1,4 +1,5 @@
 const chunk = @import("./chunk.zig");
+usingnamespace @import("./math.zig");
 
 pub fn Map(comptime mChunkType: type, mWidth: u8, mLength: u8) type {
     return struct {
@@ -38,6 +39,26 @@ pub fn Map(comptime mChunkType: type, mWidth: u8, mLength: u8) type {
         pub fn accessBlock(self: *@This(), x: u16, y: u16, z: u8) *ChunkType.BlockType {
             const data = self.accessChunk(x, y);
             return data.chunk.access(data.mx, data.my, z);
+        }
+        pub fn checkBlockFace(self: *@This(), x: u16, y: u16, z: u8, dir: *Dir3D) void {
+            //x
+            if (dir[0] < 0) {
+                dir[0] = if (x == 0 or self.accessBlock(x - 1, y, z).solid()) 0 else dir[0];
+            } else if (dir[0] > 0) {
+                dir[0] = if (x == width * ChunkType.width or self.accessBlock(x + 1, y, z).solid()) 0 else dir[0];
+            }
+            // y
+            if (dir[1] < 0) {
+                dir[1] = if (y == 0 or self.accessBlock(x, y - 1, z).solid()) 0 else dir[1];
+            } else if (dir[1] > 0) {
+                dir[1] = if (y == length * ChunkType.width or self.accessBlock(x, y + 1, z).solid()) 0 else dir[1];
+            }
+            // z
+            if (dir[2] < 0) {
+                dir[2] = if (z == 0 or self.accessBlock(x, y, z - 1).solid()) 0 else dir[2];
+            } else if (dir[2] > 0) {
+                dir[2] = if (z == ChunkType.height or self.accessBlock(x, y, z + 1).solid()) 0 else dir[2];
+            }
         }
     };
 }

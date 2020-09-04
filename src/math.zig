@@ -1,6 +1,29 @@
 const std = @import("std");
 pub const Vector3D = [3]f32;
 pub const BlockPos = [3]u16;
+pub const Dir3D = [3]i2;
+
+fn dirAbs(x: f32) i2 {
+    if (x > 0) return 1;
+    if (x < 0) return -1;
+    return 0;
+}
+
+pub fn toDir3D(vec: Vector3D) Dir3D {
+    return .{
+        dirAbs(vec[0]),
+        dirAbs(vec[1]),
+        dirAbs(vec[2]),
+    };
+}
+
+pub fn invertDir3D(vec: Dir3D) Dir3D {
+    return .{
+        -vec[0],
+        -vec[1],
+        -vec[2],
+    };
+}
 
 pub fn add3d(a: anytype, b: anytype) blk: {
     std.testing.expectEqual(@TypeOf(a), @TypeOf(b));

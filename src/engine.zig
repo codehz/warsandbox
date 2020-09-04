@@ -1,6 +1,7 @@
 const std = @import("std");
 const C = @import("./components.zig");
 const control = @import("./control.zig");
+const utils = @import("./utils.zig");
 usingnamespace @import("./ecs/ecs.zig");
 usingnamespace @import("./utils.zig");
 usingnamespace @import("./updater.zig");
@@ -12,7 +13,7 @@ pub const PlayerInitData = struct {
     health: C.Health = .{ .max = 100, .value = 100 },
     energy: C.Energy = .{ .max = 100, .value = 100 },
     label: C.Label = C.Label.init("player"),
-    box: C.BoundingBox = .{ .radius = 0.5, .height = 1.9 },
+    box: C.BoundingBox = .{ .radius = 0.32, .height = 1.9 },
 };
 
 pub fn Engine(comptime MapType: type) type {
@@ -79,6 +80,9 @@ pub fn Engine(comptime MapType: type) type {
                     if (control.keyboard.right) {
                         str.vel.value[0] += 0.01;
                     }
+                    if (control.keyboard.space) {
+                        str.pos.value[2] += 5;
+                    }
                 }
             }
         }
@@ -106,22 +110,60 @@ pub fn Engine(comptime MapType: type) type {
                 var iter = group.iterator(struct { box: *C.BoundingBox, pos: *C.Position, vel: *C.Velocity });
 
                 while (iter.next()) |str| {
-                    var xmin = @floatToInt(u16, str.pos.value[0] - str.box.radius - 0.5);
-                    var xmax = @floatToInt(u16, str.pos.value[0] + str.box.radius - 0.5);
-                    var ymin = @floatToInt(u16, str.pos.value[1] - str.box.radius - 0.5);
-                    var ymax = @floatToInt(u16, str.pos.value[1] + str.box.radius - 0.5);
-                    var zmin = @floatToInt(u8, str.pos.value[2] - 0.5);
-                    var zmax = @floatToInt(u8, str.pos.value[2] + str.box.height - 0.5);
-                    var center = add3d(str.pos.value, [3]f32{ 0, 0, str.box.height / 2 });
-                    while (xmin <= xmax) : (xmin += 1) {
-                        while (ymin <= ymax) : (ymin += 1) {
-                            while (zmin <= zmax) : (zmin += 1) {
-                                const isBlock = !self.map.accessBlock(xmin, ymin, zmin).*.isAir;
+                    var collided = false;
+                    const dir = toDir3D(str.vel.value);
+                    var idir = invertDir3D(dir);
+                    const xmin = @floatToInt(u16, str.pos.value[0] - str.box.radius);
+                    const xmax = @floatToInt(u16, str.pos.value[0] + str.box.radius);
+                    const ymin = @floatToInt(u16, str.pos.value[1] - str.box.radius);
+                    const ymax = @floatToInt(u16, str.pos.value[1] + str.box.radius);
+                    const zmin = @floatToInt(u8, str.pos.value[2]);
+                    const zmax = @floatToInt(u8, str.pos.value[2] + str.box.height);
+                    const center = add3d(str.pos.value, [3]f32{ 0, 0, str.box.height / 2 });
+                    var x = xmin;
+                    var y = ymin;
+                    var z = zmin;
+                    std.log.info("[{d:.2}, {d:.2}, {d:.2}]<{d:.2} {d:.2}> ({}({d:.2}) {}({d:.2})) ({}({d:.2}) {}({d:.2})) ({} {})", .{
+                        str.pos.value[0],
+                        str.pos.value[1],
+                        str.pos.value[2],
+                        str.box.radius,
+                        str.box.height,
+                        xmin,
+                        str.pos.value[0] - str.box.radius,
+                        xmax,
+                        str.pos.value[0] + str.box.radius,
+                        ymin,
+                        str.pos.value[1] - str.box.radius,
+                        ymax,
+                        str.pos.value[1] + str.box.radius,
+                        zmin,
+                        zmax,
+                    });
+                    while (x <= xmax) : (x += 1) {
+                        y = ymin;
+                        while (y <= ymax) : (y += 1) {
+                            z = zmin;
+                            while (z <= zmax) : (z += 1) {
+                                const isBlock = self.map.accessBlock(x, y, z).solid();
                                 if (isBlock) {
-                                    // TODO: use correct alg
-                                    str.pos.* = C.Position{ .value = sub3d(str.pos.value, str.vel.value) };
-                                    str.vel.value = .{ 0, 0, 0 };
+                                    collided = true;
+                                    var fdir = idir;
+                                    self.map.checkBlockFace(x, y, z, &fdir);
+                                    inline for (comptime utils.range(usize, 3)) |i| {
+                                        if (fdir[i] != 0) idir[i] = 0;
+                                    }
+                                    std.log.info("! {} {} {} ({} {} {})", .{ x, y, z, idir[0], idir[1], idir[2] });
                                 }
+                            }
+                        }
+                    }
+                    if (collided) {
+                        inline for (comptime utils.range(usize, 3)) |i| {
+                            const v = str.vel.value[i];
+                            if (idir[i] == 0 and dir[i] != 0) {
+                                str.pos.value[i] -= v;
+                                str.vel.value[i] = 0;
                             }
                         }
                     }
