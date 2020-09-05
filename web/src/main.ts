@@ -62,6 +62,7 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     console.timeEnd("geo");
 
     setInterval(() => mod.tick(), 50);
+    mod.tick();
 
     renderer.setAnimationLoop(() => {
         const info = utils.readCameraInfo(mod.cameraInfo);
