@@ -15,8 +15,8 @@ pub const log_level = .debug;
 
 const chunkWidth = 16;
 const chunkHeight = 32;
-const width = 4;
-const length = 16;
+const width = 2;
+const length = 4;
 const TestingMap = map.Map(chunk.Chunk(block.TestingBlock, chunkWidth, chunkHeight), width, length);
 
 const MapInfo = extern struct {
@@ -140,7 +140,7 @@ export fn loadSampleMap() bool {
     for (range(u16, length * chunkWidth)) |i| {
         for (range(u16, width * chunkWidth)) |j| {
             for (range(u8, 8)) |k| {
-                testingMap.accessBlock(i, j, k).*.isAir = prng.random.float(f32) > (1 - @intToFloat(f32, k) / 2);
+                testingMap.accessBlock(i, j, k).*.isAir = prng.random.float(f32) > (1 - @intToFloat(f32, k) / 8);
             }
         }
     }
@@ -149,7 +149,7 @@ export fn loadSampleMap() bool {
 
 export fn generateGeomentryDataForChunk(x: u8, y: u8) *ExportedPosition {
     const current = testingMap.access(x, y);
-    const ret = &exported[x + y * length];
+    const ret = &exported[x + y * width];
     ret.reset();
     for (range(u8, chunkWidth)) |i| {
         for (range(u8, chunkWidth)) |j| {

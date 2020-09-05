@@ -68,20 +68,11 @@ pub fn Engine(comptime MapType: type) type {
                 // FIXME: use faced
                 var iter = group.iterator(struct { pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
                 if (iter.next()) |str| {
-                    if (control.keyboard.up) {
-                        str.vel.value[1] += 0.01;
-                    }
-                    if (control.keyboard.down) {
-                        str.vel.value[1] -= 0.01;
-                    }
-                    if (control.keyboard.left) {
-                        str.vel.value[0] -= 0.01;
-                    }
-                    if (control.keyboard.right) {
-                        str.vel.value[0] += 0.01;
-                    }
+                    str.vel.value[1] = if (control.keyboard.up) @as(f32, 0.05) else if (control.keyboard.down) @as(f32, -0.05) else 0;
+                    str.vel.value[0] = if (control.keyboard.right) @as(f32, 0.05) else if (control.keyboard.left) @as(f32, -0.05) else 0;
                     if (control.keyboard.space) {
-                        str.pos.value[2] += 5;
+                        std.log.info("{} {} {}", .{ str.pos.value[0], str.pos.value[1], str.pos.value[2] });
+                        str.vel.value[2] = 0.2;
                     }
                 }
             }
@@ -113,6 +104,7 @@ pub fn Engine(comptime MapType: type) type {
                     var collided = false;
                     const dir = toDir3D(str.vel.value);
                     var idir = invertDir3D(dir);
+                    var bound = Bound3D.init();
                     const fxmin = str.pos.value[0] - str.box.radius;
                     const xmin = @floatToInt(u16, fxmin);
                     const fxmax = str.pos.value[0] + str.box.radius;
@@ -138,73 +130,68 @@ pub fn Engine(comptime MapType: type) type {
                                 if (isBlock) {
                                     collided = true;
                                     var fdir = idir;
-                                    self.map.checkBlockFace(x, y, z, &fdir);
                                     var lastpower = std.math.inf_f32;
-                                    var pdir: usize = 3; // invalid
-                                    inline for (comptime utils.range(usize, 3)) |i| {
-                                        if (fdir[i] != 0) {
-                                            const p = dir[i] > 0;
-                                            const power: f32 = switch (i) {
+                                    var pdir: usize = 3;
+                                    var p: bool = undefined;
+                                    var localbound = Bound3D.init();
+                                    const connected = self.map.getConnectedFace(x, y, z);
+                                    for (connected) |cdir, i| {
+                                        for (cdir) |pos, ip| {
+                                            const xlen: f32 = switch (i) {
                                                 0 => blk: {
-                                                    if (p) {
+                                                    if (ip == 0) {
+                                                        localbound.limit(i, true, x);
                                                         break :blk fxmax - @intToFloat(f32, x);
                                                     } else {
-                                                        break :blk @intToFloat(f32, x) - fxmin;
+                                                        localbound.limit(i, false, x + 1);
+                                                        break :blk @intToFloat(f32, x) - fxmin + 1;
                                                     }
                                                 },
                                                 1 => blk: {
-                                                    if (p) {
+                                                    if (ip == 0) {
+                                                        localbound.limit(i, true, y);
                                                         break :blk fymax - @intToFloat(f32, y);
                                                     } else {
-                                                        break :blk @intToFloat(f32, y) - fymin;
+                                                        localbound.limit(i, false, y + 1);
+                                                        break :blk @intToFloat(f32, y) - fymin + 1;
                                                     }
                                                 },
                                                 2 => blk: {
-                                                    if (p) {
+                                                    if (ip == 0) {
+                                                        localbound.limit(i, true, z);
                                                         break :blk fzmax - @intToFloat(f32, z);
                                                     } else {
-                                                        break :blk @intToFloat(f32, z) - fzmin;
+                                                        localbound.limit(i, false, z + 1);
+                                                        break :blk @intToFloat(f32, z) - fzmin + 1;
                                                     }
                                                 },
                                                 else => unreachable,
                                             };
-                                            if (lastpower > power) {
+                                            const power = xlen;
+                                            if (lastpower > power and xlen < 1) {
                                                 lastpower = power;
-                                                pdir = i;
+                                                const xdir: i2 = if (ip != 0) -1 else 1;
+                                                if (xdir == dir[i] and power > 0 and !pos) {
+                                                    pdir = i;
+                                                    p = ip == 0;
+                                                    // std.log.info(": {}({} {d:.2} {d:.2}) <{}, {}, {}> ({d:.2} {d:.2} {d:.2}) {}", .{ i, ip, xlen, power, x, y, z, str.pos.value[0], str.pos.value[1], str.pos.value[2], localbound });
+                                                } else {
+                                                    pdir = 3;
+                                                }
+                                            } else {
+                                                // std.log.info("! {}({} {d:.2} {d:.2}) <{}, {}, {}> ({d:.2} {d:.2} {d:.2}) {}", .{ i, ip, xlen, power, x, y, z, str.pos.value[0], str.pos.value[1], str.pos.value[2], localbound });
                                             }
                                         }
                                     }
-                                    std.log.info("({} {} {})last: {d:.3} pdir: {}", .{ x, y, z, lastpower, pdir });
-                                    if (lastpower <= 1) {
-                                        idir[pdir] = 0;
+                                    if (pdir != 3 and lastpower > 0) {
+                                        bound.mergeDirection(pdir, p, &localbound);
+                                        // std.log.warn("({d:.2} {d:.2} {d:.2}) -> ({} {} {}) last: {d:.3} {}", .{ str.pos.value[0], str.pos.value[1], str.pos.value[2], x, y, z, lastpower, bound });
                                     }
                                 }
                             }
                         }
                     }
-                    if (collided) {
-                        std.log.info("! ({} {} {})", .{ idir[0], idir[1], idir[2] });
-                        inline for (comptime utils.range(usize, 3)) |i| {
-                            const v = str.vel.value[i];
-                            if (idir[i] == 0 and dir[i] != 0) {
-                                if (i != 2) {
-                                    if (dir[i] > 0) {
-                                        str.pos.value[i] = std.math.ceil(str.pos.value[i] - v) - str.box.radius;
-                                    } else {
-                                        str.pos.value[i] = std.math.floor(str.pos.value[i] - v) + str.box.radius;
-                                    }
-                                } else {
-                                    if (dir[i] > 0) {
-                                        str.pos.value[i] = std.math.ceil(str.pos.value[i] - v) - str.box.height;
-                                    } else {
-                                        str.pos.value[i] = std.math.floor(str.pos.value[i] - v);
-                                    }
-                                }
-                                str.vel.value[i] = 0;
-                            }
-                        }
-                    }
-                }
+                    bound.applyAABB([3]f32{ str.box.radius, str.box.radius, str.box.height }, &str.pos.value, &str.vel.value);                }
             }
         }
     };

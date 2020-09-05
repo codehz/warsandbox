@@ -1,6 +1,8 @@
 const chunk = @import("./chunk.zig");
 usingnamespace @import("./math.zig");
 
+pub const ConnectedFace = [3][2]bool;
+
 pub fn Map(comptime mChunkType: type, mWidth: u8, mLength: u8) type {
     return struct {
         pub const width: usize = mWidth;
@@ -19,7 +21,7 @@ pub fn Map(comptime mChunkType: type, mWidth: u8, mLength: u8) type {
         }
 
         pub fn access(self: *@This(), cx: u8, cy: u8) *ChunkType {
-            return &self.chunks[cx * width + cy];
+            return &self.chunks[cx + cy * width];
         }
         pub fn accessChunk(self: *@This(), x: u16, y: u16) struct {
             chunk: *ChunkType,
@@ -39,6 +41,16 @@ pub fn Map(comptime mChunkType: type, mWidth: u8, mLength: u8) type {
         pub fn accessBlock(self: *@This(), x: u16, y: u16, z: u8) *ChunkType.BlockType {
             const data = self.accessChunk(x, y);
             return data.chunk.access(data.mx, data.my, z);
+        }
+        pub fn getConnectedFace(self: *@This(), x: u16, y: u16, z: u8) ConnectedFace {
+            var ret: ConnectedFace = undefined;
+            ret[0][0] = x == 0 or self.accessBlock(x - 1, y, z).solid();
+            ret[0][1] = x == width * ChunkType.width or self.accessBlock(x + 1, y, z).solid();
+            ret[1][0] = y == 0 or self.accessBlock(x, y - 1, z).solid();
+            ret[1][1] = y == length * ChunkType.width or self.accessBlock(x, y + 1, z).solid();
+            ret[2][0] = z == 0 or self.accessBlock(x, y, z - 1).solid();
+            ret[2][1] = z == ChunkType.height or self.accessBlock(x, y, z + 1).solid();
+            return ret;
         }
         pub fn checkBlockFace(self: *@This(), x: u16, y: u16, z: u8, dir: *Dir3D) void {
             //x

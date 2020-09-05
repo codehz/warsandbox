@@ -37,9 +37,12 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     // mod.tick();
     console.timeEnd("init");
 
+    const chunkBoundingBox = new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(mapInfo.chunkWidth, mapInfo.chunkWidth, mapInfo.chunkHeight));
+    const chunkBoundingSphere = new THREE.Sphere(new THREE.Vector3((mapInfo.chunkWidth / 2), (mapInfo.chunkWidth / 2), (mapInfo.chunkHeight / 2)), Math.sqrt((mapInfo.chunkWidth / 2) ** 2 + (mapInfo.chunkWidth / 2) ** 2 + (mapInfo.chunkHeight / 2) ** 2));
+
     console.time("geo");
-    for (let i = 0; i < 16; i++) {
-        for (let j = 0; j < 4; j++) {
+    for (let i = 0; i < mapInfo.width; i++) {
+        for (let j = 0; j < mapInfo.length; j++) {
             const addr = mod.generateGeomentryDataForChunk(i, j);
             const exported = utils.readExported(mapInfo, addr);
             const interleaveBuffer = exported.data.proxy(new THREE.InterleavedBuffer(exported.data.data, 8));
@@ -49,16 +52,16 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
             test.setAttribute("position", new THREE.InterleavedBufferAttribute(interleaveBuffer, 3, 0));
             test.setAttribute("normal", new THREE.InterleavedBufferAttribute(interleaveBuffer, 3, 3));
             test.setAttribute("uv", new THREE.InterleavedBufferAttribute(interleaveBuffer, 2, 6));
-            test.boundingBox = new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(16, 16, 32));
-            test.boundingSphere = new THREE.Sphere(new THREE.Vector3(8, 8, 16), Math.sqrt(8 ** 2 + 8 ** 2 + 16 ** 2));
+            test.boundingBox = chunkBoundingBox;
+            test.boundingSphere = chunkBoundingSphere;
             const tmesh = new THREE.Mesh(test, testtex);
-            tmesh.position.add(new THREE.Vector3(j * 16, i * 16, 0));
+            tmesh.position.add(new THREE.Vector3(i * mapInfo.chunkWidth, j * mapInfo.chunkWidth, 0));
             scene.add(tmesh);
         }
     }
     console.timeEnd("geo");
 
-    setInterval(() => mod.tick(), 200);
+    setInterval(() => mod.tick(), 50);
 
     renderer.setAnimationLoop(() => {
         const info = utils.readCameraInfo(mod.cameraInfo);
