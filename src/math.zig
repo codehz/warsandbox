@@ -1,4 +1,6 @@
 const std = @import("std");
+const utils = @import("./utils.zig");
+
 pub const Vector3D = [3]f32;
 pub const BlockPos = [3]u16;
 pub const Dir3D = [3]i2;
@@ -72,6 +74,92 @@ pub const Bound3D = struct {
             self.value[2][0],
             self.value[2][1],
         });
+    }
+};
+pub const AABB = struct {
+    float: [3][2]f32,
+    xrange: [2]u16,
+    yrange: [2]u16,
+    zrange: [2]u8,
+
+    pub fn fromEntityPosBox(pos: [3]f32, box: [2]f32) @This() {
+        var ret: @This() = undefined;
+        inline for (comptime utils.range(usize, 3)) |i| {
+            if (i != 2) {
+                const range = if (i == 0) &ret.xrange else &ret.yrange;
+                ret.float[i][0] = pos[i] - box[0];
+                range[0] = @floatToInt(u16, ret.float[i][0]);
+                ret.float[i][1] = pos[i] + box[0];
+                range[1] = @floatToInt(u16, ret.float[i][1]);
+            } else {
+                const range = &ret.zrange;
+                ret.float[i][0] = pos[i];
+                range[0] = @floatToInt(u8, ret.float[i][0]);
+                ret.float[i][1] = pos[i] + box[1];
+                range[1] = @floatToInt(u8, ret.float[i][1]);
+            }
+        }
+        return ret;
+    }
+
+    pub const Iterator = struct {
+        parent: *const AABB,
+        step: enum { uninit, running, done } = .uninit,
+        result: Result = undefined,
+        frame: @Frame(loop) = undefined,
+
+        pub const Result = struct {
+            x: u16,
+            y: u16,
+            z: u8,
+
+            pub fn get(self: @This(), comptime i: comptime_int) if (i == 2) u8 else u16 {
+                return switch (i) {
+                    0 => self.x,
+                    1 => self.y,
+                    2 => self.z,
+                    else => unreachable,
+                };
+            }
+
+            pub fn format(self: *const @This(), comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) @TypeOf(writer).Error!void {
+                return std.fmt.format(writer, "({} {} {})", .{ self.x, self.y, self.z });
+            }
+        };
+
+        pub fn init(parent: *const AABB) @This() {
+            return .{ .parent = parent };
+        }
+
+        fn loop(self: *@This()) void {
+            self.step = .running;
+            defer self.step = .done;
+            self.result.x = self.parent.xrange[0];
+            while (self.result.x <= self.parent.xrange[1]) : (self.result.x += 1) {
+                self.result.y = self.parent.yrange[0];
+                while (self.result.y <= self.parent.yrange[1]) : (self.result.y += 1) {
+                    self.result.z = self.parent.zrange[0];
+                    while (self.result.z <= self.parent.zrange[1]) : (self.result.z += 1) {
+                        suspend;
+                    }
+                }
+            }
+        }
+
+        pub fn next(self: *@This()) ?Result {
+            if (self.step == .done) return null;
+            if (self.step == .uninit) {
+                self.frame = async self.loop();
+            } else {
+                resume self.frame;
+            }
+            if (self.step == .done) return null;
+            return self.result;
+        }
+    };
+
+    pub fn iterator(self: *const @This()) Iterator {
+        return Iterator.init(self);
     }
 };
 

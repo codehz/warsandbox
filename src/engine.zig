@@ -101,91 +101,45 @@ pub fn Engine(comptime MapType: type) type {
                 var iter = group.iterator(struct { box: *C.BoundingBox, pos: *C.Position, vel: *C.Velocity });
 
                 while (iter.next()) |str| {
-                    var collided = false;
                     const dir = toDir3D(str.vel.value);
                     var idir = invertDir3D(dir);
                     var bound = Bound3D.initBase(0, MapType.width * MapType.ChunkType.width, 0, MapType.length * MapType.ChunkType.width, 0, MapType.ChunkType.height);
-                    const fxmin = str.pos.value[0] - str.box.radius;
-                    const xmin = @floatToInt(u16, fxmin);
-                    const fxmax = str.pos.value[0] + str.box.radius;
-                    const xmax = @floatToInt(u16, fxmax);
-                    const fymin = str.pos.value[1] - str.box.radius;
-                    const ymin = @floatToInt(u16, fymin);
-                    const fymax = str.pos.value[1] + str.box.radius;
-                    const ymax = @floatToInt(u16, fymax);
-                    const fzmin = str.pos.value[2];
-                    const zmin = @floatToInt(u8, fzmin);
-                    const fzmax = str.pos.value[2] + str.box.height;
-                    const zmax = @floatToInt(u8, fzmax);
-                    const center = add3d(str.pos.value, [3]f32{ 0, 0, str.box.height / 2 });
-                    var x = xmin;
-                    var y = ymin;
-                    var z = zmin;
-                    while (x <= xmax) : (x += 1) {
-                        y = ymin;
-                        while (y <= ymax) : (y += 1) {
-                            z = zmin;
-                            while (z <= zmax) : (z += 1) {
-                                const isBlock = self.map.accessBlock(x, y, z).solid();
-                                if (isBlock) {
-                                    collided = true;
-                                    var fdir = idir;
-                                    var lastpower = std.math.inf_f32;
-                                    var pdir: usize = 3;
-                                    var p: bool = undefined;
-                                    var localbound = Bound3D.init();
-                                    const connected = self.map.getConnectedFace(x, y, z);
-                                    for (connected) |cdir, i| {
-                                        for (cdir) |pos, ip| {
-                                            const xlen: f32 = switch (i) {
-                                                0 => blk: {
-                                                    if (ip == 0) {
-                                                        localbound.limit(i, true, x);
-                                                        break :blk fxmax - @intToFloat(f32, x);
-                                                    } else {
-                                                        localbound.limit(i, false, x + 1);
-                                                        break :blk @intToFloat(f32, x) - fxmin + 1;
-                                                    }
-                                                },
-                                                1 => blk: {
-                                                    if (ip == 0) {
-                                                        localbound.limit(i, true, y);
-                                                        break :blk fymax - @intToFloat(f32, y);
-                                                    } else {
-                                                        localbound.limit(i, false, y + 1);
-                                                        break :blk @intToFloat(f32, y) - fymin + 1;
-                                                    }
-                                                },
-                                                2 => blk: {
-                                                    if (ip == 0) {
-                                                        localbound.limit(i, true, z);
-                                                        break :blk fzmax - @intToFloat(f32, z);
-                                                    } else {
-                                                        localbound.limit(i, false, z + 1);
-                                                        break :blk @intToFloat(f32, z) - fzmin + 1;
-                                                    }
-                                                },
-                                                else => unreachable,
-                                            };
-                                            const power = xlen;
-                                            if (lastpower > power and xlen < 1) {
-                                                lastpower = power;
-                                                const xdir: i2 = if (ip != 0) -1 else 1;
-                                                if (xdir == dir[i] and power > 0 and !pos) {
-                                                    pdir = i;
-                                                    p = ip == 0;
-                                                } else {
-                                                    pdir = 3;
-                                                }
-                                            } else {
-                                            }
-                                        }
+                    const aabb = AABB.fromEntityPosBox(str.pos.value, .{ str.box.radius, str.box.height });
+                    var aabbiter = aabb.iterator();
+                    while (aabbiter.next()) |it| {
+                        if (!self.map.accessBlock(it.x, it.y, it.z).solid()) continue;
+                        var lastpower = std.math.inf_f32;
+                        var pdir: usize = 3;
+                        var p: bool = undefined;
+                        var localbound = Bound3D.init();
+                        const connected = self.map.getConnectedFace(it.x, it.y, it.z);
+                        inline for (comptime utils.range(usize, 3)) |i| {
+                            for (connected[i]) |pos, ip| {
+                                const power: f32 = blk: {
+                                    if (ip == 0) {
+                                        localbound.limit(i, true, it.get(i));
+                                        break :blk aabb.float[i][1] - @intToFloat(f32, it.get(i));
+                                    } else {
+                                        localbound.limit(i, false, it.get(i) + 1);
+                                        break :blk @intToFloat(f32, it.get(i)) - aabb.float[i][0] + 1;
                                     }
-                                    if (pdir != 3 and lastpower > 0) {
-                                        bound.mergeDirection(pdir, p, &localbound);
+                                };
+
+                                if (lastpower > power) {
+                                    lastpower = power;
+                                    const xdir: i2 = if (ip != 0) -1 else 1;
+                                    if (power > 0 and !pos) {
+                                        pdir = i;
+                                        p = ip == 0;
+                                    } else {
+                                        pdir = 3;
                                     }
                                 }
                             }
+                        }
+
+                        if (pdir != 3 and lastpower > 0) {
+                            bound.mergeDirection(pdir, p, &localbound);
                         }
                     }
                     bound.applyAABB([3]f32{ str.box.radius, str.box.radius, str.box.height }, &str.pos.value, &str.vel.value);
