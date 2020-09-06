@@ -14,6 +14,16 @@ pub const Bound3D = struct {
         };
     }
 
+    pub fn initBase(xmin: f32, xmax: f32, ymin: f32, ymax: f32, zmin: f32, zmax: f32) @This() {
+        return .{
+            .value = .{
+                .{ xmin, xmax },
+                .{ ymin, ymax },
+                .{ zmin, zmax },
+            },
+        };
+    }
+
     pub fn limit(self: *@This(), i: u32, p: bool, raw: anytype) void {
         const value = @intToFloat(f32, raw);
         if (p) {

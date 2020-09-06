@@ -137,8 +137,8 @@ export fn tick() bool {
 export fn loadSampleMap() bool {
     var prng = std.rand.DefaultPrng.init(0);
     testingMap = TestingMap.init();
-    for (range(u16, length * chunkWidth)) |i| {
-        for (range(u16, width * chunkWidth)) |j| {
+    for (range(u16, width * chunkWidth)) |i| {
+        for (range(u16, length * chunkWidth)) |j| {
             for (range(u8, 8)) |k| {
                 testingMap.accessBlock(i, j, k).*.isAir = prng.random.float(f32) > (1 - @intToFloat(f32, k) / 8);
             }

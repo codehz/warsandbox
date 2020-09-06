@@ -71,7 +71,7 @@ pub fn Engine(comptime MapType: type) type {
                     str.vel.value[1] = if (control.keyboard.up) @as(f32, 0.05) else if (control.keyboard.down) @as(f32, -0.05) else 0;
                     str.vel.value[0] = if (control.keyboard.right) @as(f32, 0.05) else if (control.keyboard.left) @as(f32, -0.05) else 0;
                     if (control.keyboard.space) {
-                        std.log.info("{} {} {}", .{ str.pos.value[0], str.pos.value[1], str.pos.value[2] });
+                        std.log.info("{d:.2} {d:.2} {d:.2}", .{ str.pos.value[0], str.pos.value[1], str.pos.value[2] });
                         str.vel.value[2] = 0.2;
                     }
                 }
@@ -104,7 +104,7 @@ pub fn Engine(comptime MapType: type) type {
                     var collided = false;
                     const dir = toDir3D(str.vel.value);
                     var idir = invertDir3D(dir);
-                    var bound = Bound3D.init();
+                    var bound = Bound3D.initBase(0, MapType.width * MapType.ChunkType.width, 0, MapType.length * MapType.ChunkType.width, 0, MapType.ChunkType.height);
                     const fxmin = str.pos.value[0] - str.box.radius;
                     const xmin = @floatToInt(u16, fxmin);
                     const fxmax = str.pos.value[0] + str.box.radius;
@@ -174,24 +174,22 @@ pub fn Engine(comptime MapType: type) type {
                                                 if (xdir == dir[i] and power > 0 and !pos) {
                                                     pdir = i;
                                                     p = ip == 0;
-                                                    // std.log.info(": {}({} {d:.2} {d:.2}) <{}, {}, {}> ({d:.2} {d:.2} {d:.2}) {}", .{ i, ip, xlen, power, x, y, z, str.pos.value[0], str.pos.value[1], str.pos.value[2], localbound });
                                                 } else {
                                                     pdir = 3;
                                                 }
                                             } else {
-                                                // std.log.info("! {}({} {d:.2} {d:.2}) <{}, {}, {}> ({d:.2} {d:.2} {d:.2}) {}", .{ i, ip, xlen, power, x, y, z, str.pos.value[0], str.pos.value[1], str.pos.value[2], localbound });
                                             }
                                         }
                                     }
                                     if (pdir != 3 and lastpower > 0) {
                                         bound.mergeDirection(pdir, p, &localbound);
-                                        // std.log.warn("({d:.2} {d:.2} {d:.2}) -> ({} {} {}) last: {d:.3} {}", .{ str.pos.value[0], str.pos.value[1], str.pos.value[2], x, y, z, lastpower, bound });
                                     }
                                 }
                             }
                         }
                     }
-                    bound.applyAABB([3]f32{ str.box.radius, str.box.radius, str.box.height }, &str.pos.value, &str.vel.value);                }
+                    bound.applyAABB([3]f32{ str.box.radius, str.box.radius, str.box.height }, &str.pos.value, &str.vel.value);
+                }
             }
         }
     };
