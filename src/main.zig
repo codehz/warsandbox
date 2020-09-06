@@ -53,6 +53,23 @@ const ExportedPosition = extern struct {
 const CameraInfo = extern struct {
     posrot: [5]f32,
 
+    fn adjustCamera(self: *@This(), offset: f32) void {
+        var camView = engine.registry.view(.{ C.ControlByPlayer, C.Velocity, C.Position, C.Faced }, .{});
+        var camIter = camView.iterator();
+        if (camIter.next()) |e| {
+            const pos = engine.registry.getConst(C.Position, e);
+            const vel = engine.registry.getConst(C.Velocity, e);
+            const faced = engine.registry.getConst(C.Faced, e);
+            self.posrot = [_]f32{
+                pos.value[0] + vel.value[0] * offset,
+                pos.value[1] + vel.value[1] * offset,
+                pos.value[2] + vel.value[2] * offset,
+                faced.yaw,
+                faced.pitch,
+            };
+        }
+    }
+
     fn updateCamera(self: *@This(), stopped: *bool) void {
         var camView = engine.registry.view(.{ C.ControlByPlayer, C.Position, C.Faced }, .{});
         while (true) {
@@ -111,27 +128,11 @@ export fn initPlayer() void {
 
 export fn tick() bool {
     engine.update();
-    // var grView = registry.view(.{ C.Velocity, C.Position, C.Physics }, .{});
-    // var grIter = grView.iterator();
-    // while (grIter.next()) |e| {
-    //     var vel = grView.get(C.Velocity, e);
-    //     const phys = grView.get(C.Physics, e);
-    //     vel.z -= phys.gravity;
-    // }
-    // var vpIter = state.vpGroup.iterator(struct { vel: *C.Velocity, pos: *C.Position });
-    // while (vpIter.next()) |e| {
-    //     e.pos.x += e.vel.x;
-    //     e.pos.y += e.vel.y;
-    //     e.pos.z += e.vel.z;
-    // }
-    // var camView = registry.view(.{ C.ControlByPlayer, C.Position, C.Faced }, .{});
-    // var camIter = camView.iterator();
-    // if (camIter.next()) |e| {
-    //     const pos = registry.getConst(C.Position, e);
-    //     const faced = registry.getConst(C.Faced, e);
-    //     cameraInfo.posrot = [_]f32{ pos.x, pos.y, pos.z, faced.yaw, faced.pitch };
-    // }
     return true;
+}
+
+export fn microtick(offset: f32) void {
+    cameraInfo.adjustCamera(offset);
 }
 
 export fn loadSampleMap() bool {

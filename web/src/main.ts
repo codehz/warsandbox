@@ -61,10 +61,17 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     }
     console.timeEnd("geo");
 
-    setInterval(() => mod.tick(), 50);
+    setInterval(() => {
+        mod.tick()
+        ftime = +new Date();
+    }, 50);
     mod.tick();
+    let ftime = +new Date();
 
     renderer.setAnimationLoop(() => {
+        const delta = (+new Date() - ftime) / 50;
+        if (delta > 0.1)
+            mod.microtick(delta);
         const info = utils.readCameraInfo(mod.cameraInfo);
         camera.position.set(info.pos[0], info.pos[1], info.pos[2] + 1.7);
         const pitch = info.rot[1] - Math.PI / 2;
