@@ -70,7 +70,7 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
 
     renderer.setAnimationLoop(() => {
         const delta = (+new Date() - ftime) / 50;
-        if (delta > 0.1)
+        if (delta > 0.1 && delta < 1)
             mod.microtick(delta);
         const info = utils.readCameraInfo(mod.cameraInfo);
         camera.position.set(info.pos[0], info.pos[1], info.pos[2] + 1.7);
