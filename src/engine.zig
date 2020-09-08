@@ -2,10 +2,13 @@ const std = @import("std");
 const C = @import("./components.zig");
 const control = @import("./control.zig");
 const utils = @import("./utils.zig");
-usingnamespace @import("./ecs/ecs.zig");
+const ecs = @import("./ecs.zig");
 usingnamespace @import("./utils.zig");
 usingnamespace @import("./updater.zig");
 usingnamespace @import("./math.zig");
+
+pub const Entity = usize;
+const Registry = ecs.Registry(C, Entity);
 
 pub const PlayerInitData = struct {
     pos: C.Position,
@@ -36,17 +39,17 @@ pub fn Engine(comptime MapType: type) type {
             self.registry.deinit();
         }
 
-        pub fn initPlayer(self: *@This(), data: PlayerInitData) Entity {
+        pub fn initPlayer(self: *@This(), data: PlayerInitData) !Entity {
             var player = self.registry.create();
-            self.registry.add(player, C.ControlByPlayer{});
-            self.registry.add(player, C.Renderable{});
-            self.registry.add(player, data.pos);
-            self.registry.add(player, C.Velocity{ .value = .{ 0, 0, 0 } });
-            self.registry.add(player, data.faced);
-            self.registry.add(player, data.box);
-            self.registry.add(player, data.health);
-            self.registry.add(player, data.energy);
-            self.registry.add(player, data.label);
+            try self.registry.add(player, C.ControlByPlayer{});
+            try self.registry.add(player, C.Renderable{});
+            try self.registry.add(player, data.pos);
+            try self.registry.add(player, C.Velocity{ .value = .{ 0, 0, 0 } });
+            try self.registry.add(player, data.faced);
+            try self.registry.add(player, data.box);
+            try self.registry.add(player, data.health);
+            try self.registry.add(player, data.energy);
+            try self.registry.add(player, data.label);
             return player;
         }
 
@@ -61,12 +64,11 @@ pub fn Engine(comptime MapType: type) type {
         }
 
         fn updateControl(self: *@This(), flag: *bool) void {
-            var group = self.registry.group(.{C.ControlByPlayer}, .{ C.Velocity, C.Position, C.Faced }, .{});
             while (true) {
                 suspend;
                 if (flag.*) return;
                 // FIXME: use faced
-                var iter = group.iterator(struct { pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
+                var iter = self.registry.view(struct { pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
                 if (iter.next()) |str| {
                     str.vel.value[1] = if (control.keyboard.up) @as(f32, 0.05) else if (control.keyboard.down) @as(f32, -0.05) else 0;
                     str.vel.value[0] = if (control.keyboard.right) @as(f32, 0.05) else if (control.keyboard.left) @as(f32, -0.05) else 0;
@@ -79,14 +81,13 @@ pub fn Engine(comptime MapType: type) type {
         }
 
         fn updatePosition(self: *@This(), flag: *bool) void {
-            var group = self.registry.group(.{ C.Position, C.Velocity }, .{}, .{});
             while (true) {
                 suspend;
                 if (flag.*) break;
-                var iter = group.iterator(struct { pos: *C.Position, vel: *C.Velocity });
+                var iter = self.registry.view(struct { pos: *C.Position, vel: *C.Velocity });
 
                 while (iter.next()) |str| {
-                    const e = iter.entity();
+                    const e = iter.entity;
                     str.vel.value[2] -= 0.01;
                     str.pos.* = C.Position{ .value = add3d(str.pos.value, str.vel.value) };
                 }
@@ -94,11 +95,10 @@ pub fn Engine(comptime MapType: type) type {
         }
 
         fn fixCollisionWithMap(self: *@This(), flag: *bool) void {
-            var group = self.registry.group(.{C.BoundingBox}, .{ C.Position, C.Velocity }, .{});
             while (true) {
                 suspend;
                 if (flag.*) break;
-                var iter = group.iterator(struct { box: *C.BoundingBox, pos: *C.Position, vel: *C.Velocity });
+                var iter = self.registry.view(struct { box: *C.BoundingBox, pos: *C.Position, vel: *C.Velocity });
 
                 while (iter.next()) |str| {
                     const dir = toDir3D(str.vel.value);

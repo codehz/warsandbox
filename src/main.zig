@@ -5,7 +5,6 @@ const map = @import("./map.zig");
 const common = @import("./common.zig");
 const sche = @import("./scheduler.zig");
 usingnamespace @import("./utils.zig");
-const ecs = @import("./ecs/ecs.zig");
 const C = @import("./components.zig");
 const console = @import("./console.zig");
 usingnamespace @import("./engine.zig");
@@ -54,12 +53,16 @@ const CameraInfo = extern struct {
     posrot: [5]f32,
 
     fn adjustCamera(self: *@This(), offset: f32) void {
-        var camView = engine.registry.view(.{ C.ControlByPlayer, C.Velocity, C.Position, C.Faced }, .{});
-        var camIter = camView.iterator();
-        if (camIter.next()) |e| {
-            const pos = engine.registry.getConst(C.Position, e);
-            const vel = engine.registry.getConst(C.Velocity, e);
-            const faced = engine.registry.getConst(C.Faced, e);
+        var camIter = engine.registry.view(struct {
+            control: *C.ControlByPlayer,
+            pos: *C.Position,
+            vel: *C.Velocity,
+            faced: *C.Faced,
+        });
+        if (camIter.next()) |str| {
+            const pos = str.pos;
+            const vel = str.vel;
+            const faced = str.faced;
             self.posrot = [_]f32{
                 pos.value[0] + vel.value[0] * offset,
                 pos.value[1] + vel.value[1] * offset,
@@ -71,14 +74,17 @@ const CameraInfo = extern struct {
     }
 
     fn updateCamera(self: *@This(), stopped: *bool) void {
-        var camView = engine.registry.view(.{ C.ControlByPlayer, C.Position, C.Faced }, .{});
         while (true) {
             suspend;
             if (stopped.*) return;
-            var camIter = camView.iterator();
-            if (camIter.next()) |e| {
-                const pos = engine.registry.getConst(C.Position, e);
-                const faced = engine.registry.getConst(C.Faced, e);
+            var camIter = engine.registry.view(struct {
+                control: *C.ControlByPlayer,
+                pos: *C.Position,
+                faced: *C.Faced,
+            });
+            if (camIter.next()) |str| {
+                const pos = str.pos;
+                const faced = str.faced;
                 self.posrot = [_]f32{ pos.value[0], pos.value[1], pos.value[2], faced.yaw, faced.pitch };
             }
         }
@@ -103,7 +109,7 @@ var gpa: std.heap.GeneralPurposeAllocator(.{
 }) = .{};
 export var exported: [width * length]ExportedPosition = undefined;
 var testingMap: TestingMap = undefined;
-var player: ecs.Entity = undefined;
+var player: Entity = undefined;
 var engine: Engine(TestingMap) = undefined;
 
 export fn initEngine() void {
@@ -121,7 +127,7 @@ export fn deinitEngine() void {
 export fn initPlayer() void {
     player = engine.initPlayer(.{
         .pos = .{ .value = .{ 0.5, 0.5, 8 } },
-    });
+    }) catch unreachable;
 
     engine.updater.addFn(CameraInfo.updateCamera, &cameraInfo) catch report("Failed to register camera updater");
 }
