@@ -54,6 +54,10 @@ pub const Bound3D = struct {
         }
     }
 
+    pub fn applyAxis(self: *const @This(), i: u32, input: f32) f32 {
+        return minmax(input, self.value[i][0], self.value[i][1]);
+    }
+
     pub fn applyAABB(self: *const @This(), aabb: Vector3D, pos: *Vector3D, vel: *Vector3D) void {
         for (pos) |*val, dim| {
             const new = if (dim == 2)
@@ -82,20 +86,20 @@ pub const AABB = struct {
     yrange: [2]u16,
     zrange: [2]u8,
 
-    pub fn fromEntityPosBox(pos: [3]f32, box: [2]f32) @This() {
+    pub fn fromEntityPosBox(pos: [3]f32, box: [2]f32, bound: Bound3D) @This() {
         var ret: @This() = undefined;
         inline for (comptime utils.range(usize, 3)) |i| {
             if (i != 2) {
                 const range = if (i == 0) &ret.xrange else &ret.yrange;
-                ret.float[i][0] = pos[i] - box[0];
+                ret.float[i][0] = bound.applyAxis(i, pos[i] - box[0]);
                 range[0] = @floatToInt(u16, ret.float[i][0]);
-                ret.float[i][1] = pos[i] + box[0];
+                ret.float[i][1] = bound.applyAxis(i, pos[i] + box[0]);
                 range[1] = @floatToInt(u16, ret.float[i][1]);
             } else {
                 const range = &ret.zrange;
-                ret.float[i][0] = pos[i];
+                ret.float[i][0] = bound.applyAxis(i, pos[i]);
                 range[0] = @floatToInt(u8, ret.float[i][0]);
-                ret.float[i][1] = pos[i] + box[1];
+                ret.float[i][1] = bound.applyAxis(i, pos[i] + box[1]);
                 range[1] = @floatToInt(u8, ret.float[i][1]);
             }
         }

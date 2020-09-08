@@ -104,7 +104,7 @@ pub fn Engine(comptime MapType: type) type {
                     const dir = toDir3D(str.vel.value);
                     var idir = invertDir3D(dir);
                     var bound = Bound3D.initBase(0, MapType.width * MapType.ChunkType.width, 0, MapType.length * MapType.ChunkType.width, 0, MapType.ChunkType.height);
-                    const aabb = AABB.fromEntityPosBox(str.pos.value, .{ str.box.radius, str.box.height });
+                    const aabb = AABB.fromEntityPosBox(str.pos.value, .{ str.box.radius, str.box.height }, bound);
                     var aabbiter = aabb.iterator();
                     while (aabbiter.next()) |it| {
                         if (!self.map.accessBlock(it.x, it.y, it.z).solid()) continue;
