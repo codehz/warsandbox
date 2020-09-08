@@ -546,6 +546,10 @@ pub fn TreeMapUnmanaged(comptime K: type, comptime V: type, comptime compareFn: 
             return true;
         }
 
+        pub fn lookup(self: *@This(), key: K) ?*KV {
+            return self.raw.lookup(key);
+        }
+
         pub fn find(self: *@This(), key: K) ?*V {
             const ret = self.raw.lookup(key) orelse return null;
             return &ret.value;
@@ -632,6 +636,10 @@ pub fn TreeMap(comptime K: type, comptime V: type, comptime compareFn: fn (a: K,
 
         pub fn remove(self: *@This(), key: K) bool {
             return self.unmanaged.remove(self.allocator, key);
+        }
+
+        pub fn lookup(self: *@This(), key: K) ?*KV {
+            return self.unmanaged.lookup(key);
         }
 
         pub fn find(self: *@This(), key: K) ?*V {

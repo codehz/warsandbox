@@ -113,10 +113,19 @@ pub fn Registry(comptime components: anytype, comptime Entity: type) type {
             const ct = @typeInfo(field.field_type).Pointer.child;
             const ctn = @typeName(ct);
             const ft = srb.FieldType(Storage, @typeName(ct));
-            const ItType = ft.Iterator;
             return struct {
-                iter: ItType,
+                iter: ft.Iterator,
+                source: *ft,
                 last: ?*ft.KV = null,
+
+                fn jump(self: *@This(), key: Entity) bool {
+                    if (self.source.lookup(key)) |kv| {
+                        self.last = kv;
+                        self.iter.node = &kv.node;
+                        return true;
+                    }
+                    return false;
+                }
 
                 fn peek(self: *@This()) ?Entity {
                     if (self.last) |last| return last.key;
@@ -169,7 +178,7 @@ pub fn Registry(comptime components: anytype, comptime Entity: type) type {
                 fn init(storage: *Storage) @This() {
                     var ret: @This() = .{ .iters = undefined };
                     inline for (iterators) |def, i| {
-                        @field(ret.iters, def.name) = .{ .iter = @field(storage, def.name).iterator() };
+                        @field(ret.iters, def.name) = .{ .source = &@field(storage, def.name), .iter = @field(storage, def.name).iterator() };
                     }
                     return ret;
                 }
@@ -180,11 +189,15 @@ pub fn Registry(comptime components: anytype, comptime Entity: type) type {
                         var ent: ?Entity = null;
                         inline for (iterators) |def, i| {
                             var iter = &@field(self.iters, def.name);
-                            var current = iter.peek() orelse return null;
+                            const current = iter.peek() orelse return null;
                             if (ent) |e| {
-                                while (current != e) {
-                                    if (current > e) continue :out;
-                                    current = iter.next() orelse return null;
+                                const re = std.math.order(current, e);
+                                if (re == .lt) {
+                                    if (!iter.jump(e)) {
+                                        continue :out;
+                                    }
+                                } else if (re == .gt) {
+                                    continue :out;
                                 }
                                 @field(ret, itemFields[i].name) = iter.fetch();
                             } else {
