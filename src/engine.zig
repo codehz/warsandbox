@@ -68,7 +68,7 @@ pub fn Engine(comptime MapType: type) type {
                 suspend;
                 if (flag.*) return;
                 // FIXME: use faced
-                var iter = self.registry.view(struct { pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
+                var iter = self.registry.view(struct { control: *C.ControlByPlayer, pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
                 if (iter.next()) |str| {
                     str.vel.value[1] = if (control.keyboard.up) @as(f32, 0.05) else if (control.keyboard.down) @as(f32, -0.05) else 0;
                     str.vel.value[0] = if (control.keyboard.right) @as(f32, 0.05) else if (control.keyboard.left) @as(f32, -0.05) else 0;
