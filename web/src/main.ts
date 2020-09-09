@@ -120,6 +120,9 @@ function enterGameMode(canvas: HTMLCanvasElement, f: (f: boolean) => void) {
     }
     document.onpointerlockchange = (e) => {
         if (!!document.pointerLockElement) {
+            try {
+                (navigator as any).keyboard.lock();
+            } catch { }
             f(true);
         } else {
             f(false);
