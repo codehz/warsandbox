@@ -78,7 +78,12 @@ pub fn Engine(comptime MapType: type) type {
                 var iter = self.registry.view(struct { control: *C.ControlByPlayer, pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
                 if (iter.next()) |str| {
                     str.faced.yaw += control.info.rotate[0];
-                    str.faced.pitch += control.info.rotate[1];
+                    if (str.faced.yaw < 0) {
+                        str.faced.yaw += std.math.pi * 2.0;
+                    } else if (str.faced.yaw > std.math.pi * 2.0) {
+                        str.faced.yaw -= std.math.pi * 2.0;
+                    }
+                    str.faced.pitch = minmax(str.faced.pitch + control.info.rotate[1], std.math.pi / -2.0, std.math.pi / 2.0);
                     control.info.rotate = [2]f32{ 0, 0 };
                     const c = std.math.cos(str.faced.yaw);
                     const s = std.math.sin(str.faced.yaw);

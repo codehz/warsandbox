@@ -8,6 +8,7 @@ usingnamespace @import("./utils.zig");
 const C = @import("./components.zig");
 const console = @import("./console.zig");
 usingnamespace @import("./engine.zig");
+usingnamespace @import("./math.zig");
 
 pub const log = console.zlog;
 pub const log_level = .debug;
@@ -68,7 +69,7 @@ const CameraInfo = extern struct {
                 pos.value[1] + vel.value[1] * offset,
                 pos.value[2] + vel.value[2] * offset,
                 faced.yaw + control.info.rotate[0],
-                faced.pitch + control.info.rotate[1],
+                minmax(faced.pitch + control.info.rotate[1], std.math.pi / -2.0, std.math.pi / 2.0),
             };
         }
     }
