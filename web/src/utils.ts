@@ -58,29 +58,94 @@ export function getFloat32BufferFromSlice(addr: number, len: number) {
 export function getUint32BufferFromSlice(addr: number, len: number) {
     return new Uint32Array(memory.buffer, addr, len / 4);
 }
+export function getDataViewFromSlice(addr: number, len: number) {
+    return new DataView(memory.buffer, addr, len);
+}
 
-class KeyboardMapper {
+export class KeyboardMapper {
+    private control: ControlMapper;
+    private _up: boolean = false;
+    private _down: boolean = false;
+    private _left: boolean = false;
+    private _right: boolean = false;
+
+    constructor(control: ControlMapper) {
+        this.control = control;
+    }
+
+    private update() {
+        let x = 0;
+        let y = 0;
+        if (this._left) x -= 1;
+        if (this._right) x += 1;
+        if (this._up) y += 1;
+        if (this._down) y -= 1;
+        const n = (x ** 2 + y ** 2) ** 0.5;
+        if (n == 0) {
+            this.control.move = [0, 0];
+        } else {
+            x /= n;
+            y /= n;
+            this.control.move = [x, y];
+        }
+    }
+
+    set up(s: boolean) {
+        this._up = s;
+        this.update();
+    }
+    set down(s: boolean) {
+        this._down = s;
+        this.update();
+    }
+    set left(s: boolean) {
+        this._left = s;
+        this.update();
+    }
+    set right(s: boolean) {
+        this._right = s;
+        this.update();
+    }
+};
+
+class ControlMapper {
     addr: number;
-    static UP = 0;
-    static DOWN = 1;
-    static LEFT = 2;
-    static RIGHT = 3;
-    static SPACE = 4;
+    static MOVE_X = 0;
+    static MOVE_Y = 4;
+    static ROTATE_X = 8;
+    static ROTATE_Y = 12;
+    static JUMP = 16;
+    static SNEAK = 17;
+    static BOOST = 18;
+    static USE1 = 19;
+    static USE2 = 20;
+    static USE3 = 21;
 
     constructor(addr: number) {
         this.addr = addr;
     }
 
-    get buffer() { return getUint8BufferFromSlice(this.addr, 5); }
+    get view() { return getDataViewFromSlice(this.addr, 22); }
 
-    set up(flag: boolean) { this.buffer[KeyboardMapper.UP] = flag ? 1 : 0; }
-    set down(flag: boolean) { this.buffer[KeyboardMapper.DOWN] = flag ? 1 : 0; }
-    set left(flag: boolean) { this.buffer[KeyboardMapper.LEFT] = flag ? 1 : 0; }
-    set right(flag: boolean) { this.buffer[KeyboardMapper.RIGHT] = flag ? 1 : 0; }
-    set space(flag: boolean) { this.buffer[KeyboardMapper.SPACE] = flag ? 1 : 0; }
-};
-export function getKeyboardMapper(addr: number) {
-    return new KeyboardMapper(addr);
+    set move([x, y]: [number, number]) {
+        this.view.setFloat32(ControlMapper.MOVE_X, x, true);
+        this.view.setFloat32(ControlMapper.MOVE_Y, y, true);
+    }
+
+    set rotate([x, y]: [number, number]) {
+        this.view.setFloat32(ControlMapper.ROTATE_X, x, true);
+        this.view.setFloat32(ControlMapper.ROTATE_Y, y, true);
+    }
+
+    set jump(val: boolean) { this.view.setUint8(ControlMapper.JUMP, val ? 1 : 0); }
+    set sneak(val: boolean) { this.view.setUint8(ControlMapper.SNEAK, val ? 1 : 0); }
+    set boost(val: boolean) { this.view.setUint8(ControlMapper.BOOST, val ? 1 : 0); }
+    set use1(val: boolean) { this.view.setUint8(ControlMapper.USE1, val ? 1 : 0); }
+    set use2(val: boolean) { this.view.setUint8(ControlMapper.USE2, val ? 1 : 0); }
+    set use3(val: boolean) { this.view.setUint8(ControlMapper.USE3, val ? 1 : 0); }
+}
+export function getControlMapper(addr: number) {
+    return new ControlMapper(addr);
 }
 export function readCameraInfo(addr: number): {
     pos: [number, number, number],

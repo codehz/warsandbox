@@ -82,12 +82,15 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
         renderer.render(scene, camera);
     });
 
-    const mgr = utils.getKeyboardMapper(mod.keyboard);
+    const mgr = utils.getControlMapper(mod.control);
+    const kbdm = new utils.KeyboardMapper(mgr);
 
-    kbd.detect([87, 38], o => mgr.up = o);
-    kbd.detect([83, 40], o => mgr.down = o);
-    kbd.detect([65, 37], o => mgr.left = o);
-    kbd.detect([68, 39], o => mgr.right = o);
-    kbd.detect([32], o => mgr.space = o);
+    kbd.detect([87, 38], o => kbdm.up = o);
+    kbd.detect([83, 40], o => kbdm.down = o);
+    kbd.detect([65, 37], o => kbdm.left = o);
+    kbd.detect([68, 39], o => kbdm.right = o);
+    kbd.detect([32], o => mgr.jump = o);
+    kbd.detect([16], o => mgr.sneak = o);
+    kbd.detect([17], o => mgr.boost = o);
 }
 

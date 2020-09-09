@@ -68,12 +68,28 @@ pub fn Engine(comptime MapType: type) type {
                 suspend;
                 if (flag.*) return;
                 // FIXME: use faced
+                // TODO: detect mid-air
+                // TODO: add max spped prop
+                const maxspeed = 0.1;
+                const maxboostspeed = 0.3;
+                const maxboostshiftspeed = 0.05;
+                const changerate = 0.2;
                 var iter = self.registry.view(struct { control: *C.ControlByPlayer, pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
                 if (iter.next()) |str| {
-                    str.vel.value[1] = if (control.keyboard.up) @as(f32, 0.05) else if (control.keyboard.down) @as(f32, -0.05) else 0;
-                    str.vel.value[0] = if (control.keyboard.right) @as(f32, 0.05) else if (control.keyboard.left) @as(f32, -0.05) else 0;
-                    if (control.keyboard.space) {
-                        std.log.info("{d:.2} {d:.2} {d:.2}", .{ str.pos.value[0], str.pos.value[1], str.pos.value[2] });
+                    str.faced.yaw += control.info.rotate[0];
+                    str.faced.pitch += control.info.rotate[1];
+                    control.info.rotate = [2]f32{ 0, 0 };
+                    const c = std.math.cos(str.faced.yaw);
+                    const s = std.math.sin(str.faced.yaw);
+                    const speedY: f32 = if (control.info.boost) maxboostspeed else maxspeed;
+                    const speedX: f32 = if (control.info.boost) maxboostshiftspeed else maxspeed;
+                    const target = Vector3D{
+                        c * speedX * control.info.move[0] - s * speedY * control.info.move[1],
+                        s * speedX * control.info.move[0] + c * speedY * control.info.move[1],
+                        str.vel.value[2],
+                    };
+                    str.vel.value = morph3d(str.vel.value, target, changerate);
+                    if (control.info.jump) {
                         str.vel.value[2] = 0.2;
                     }
                 }

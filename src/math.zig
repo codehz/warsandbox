@@ -209,6 +209,14 @@ pub fn sub3d(a: anytype, b: anytype) blk: {
     return .{ a[0] - b[0], a[1] - b[1], a[2] - b[2] };
 }
 
+pub fn morph3d(a: Vector3D, b: Vector3D, t: f32) Vector3D {
+    return .{
+        (b[0] - a[0]) * t + a[0],
+        (b[1] - a[1]) * t + a[1],
+        (b[2] - a[2]) * t + a[2],
+    };
+}
+
 pub fn toBlockPos(src: Vector3D) BlockPos {
     return .{
         @floatToInt(u16, src[0] - 0.5),
