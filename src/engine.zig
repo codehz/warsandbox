@@ -71,9 +71,10 @@ pub fn Engine(comptime MapType: type) type {
                 // TODO: detect mid-air
                 // TODO: add max spped prop
                 const maxspeed = 0.1;
-                const maxboostspeed = 0.3;
-                const maxboostshiftspeed = 0.05;
+                const maxboostspeed = 0.2;
+                const maxboostshiftspeed = 0.08;
                 const changerate = 0.2;
+                const boostchangerate = 0.1;
                 var iter = self.registry.view(struct { control: *C.ControlByPlayer, pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
                 if (iter.next()) |str| {
                     str.faced.yaw += control.info.rotate[0];
@@ -88,7 +89,7 @@ pub fn Engine(comptime MapType: type) type {
                         s * speedX * control.info.move[0] + c * speedY * control.info.move[1],
                         str.vel.value[2],
                     };
-                    str.vel.value = morph3d(str.vel.value, target, changerate);
+                    str.vel.value = morph3d(str.vel.value, target, if (control.info.boost) boostchangerate else changerate);
                     if (control.info.jump) {
                         str.vel.value[2] = 0.2;
                     }
