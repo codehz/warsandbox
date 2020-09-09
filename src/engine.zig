@@ -105,7 +105,7 @@ pub fn Engine(comptime MapType: type) type {
 
                 while (iter.next()) |str| {
                     const e = iter.entity;
-                    str.vel.value[2] -= 0.01;
+                    str.vel.value[2] -= 0.02;
                     str.pos.* = C.Position{ .value = add3d(str.pos.value, str.vel.value) };
                 }
             }

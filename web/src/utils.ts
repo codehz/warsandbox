@@ -128,13 +128,15 @@ class ControlMapper {
     get view() { return getDataViewFromSlice(this.addr, 22); }
 
     set move([x, y]: [number, number]) {
-        this.view.setFloat32(ControlMapper.MOVE_X, x, true);
-        this.view.setFloat32(ControlMapper.MOVE_Y, y, true);
+        const view = this.view;
+        view.setFloat32(ControlMapper.MOVE_X, x, true);
+        view.setFloat32(ControlMapper.MOVE_Y, y, true);
     }
 
     set rotate([x, y]: [number, number]) {
-        this.view.setFloat32(ControlMapper.ROTATE_X, x, true);
-        this.view.setFloat32(ControlMapper.ROTATE_Y, y, true);
+        const view = this.view;
+        view.setFloat32(ControlMapper.ROTATE_X, view.getFloat32(ControlMapper.ROTATE_X, true) + x, true);
+        view.setFloat32(ControlMapper.ROTATE_Y, view.getFloat32(ControlMapper.ROTATE_Y, true) + y, true);
     }
 
     set jump(val: boolean) { this.view.setUint8(ControlMapper.JUMP, val ? 1 : 0); }

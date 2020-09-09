@@ -61,7 +61,10 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     }
     console.timeEnd("geo");
 
+    let paused = true;
+
     setInterval(() => {
+        if (paused) return;
         mod.tick()
         ftime = +new Date();
     }, 50);
@@ -69,12 +72,13 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     let ftime = +new Date();
 
     renderer.setAnimationLoop(() => {
+        if (paused) return;
         const delta = (+new Date() - ftime) / 50;
         if (delta > 0.1 && delta < 1)
             mod.microtick(delta);
         const info = utils.readCameraInfo(mod.cameraInfo);
         camera.position.set(info.pos[0], info.pos[1], info.pos[2] + 1.7);
-        const pitch = info.rot[1] - Math.PI / 2;
+        const pitch = info.rot[1];
         const yaw = info.rot[0];
         camera.rotation.set(Math.PI / 2 + pitch, 0, yaw, 'YZX');
         camera.matrixWorldNeedsUpdate = true;
@@ -92,5 +96,42 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     kbd.detect([32], o => mgr.jump = o);
     kbd.detect([16], o => mgr.sneak = o);
     kbd.detect([17], o => mgr.boost = o);
+
+    enterGameMode(renderer.domElement, (o) => paused = !o);
+
+    document.onmousemove = (e) => {
+        if (paused) return;
+        mgr.rotate = [-e.movementX / 100, -e.movementY / 100];
+    }
 }
 
+function enterGameMode(canvas: HTMLCanvasElement, f: (f: boolean) => void) {
+    document.onfullscreenchange = (e) => {
+        if (!!document.fullscreenElement) {
+            canvas.requestPointerLock();
+        } else {
+            f(false);
+            canvas.onclick = cb;
+        }
+    }
+    document.onfullscreenerror = (e) => {
+        console.warn(e);
+        f(false);
+    }
+    document.onpointerlockchange = (e) => {
+        if (!!document.pointerLockElement) {
+            f(true);
+        } else {
+            f(false);
+            canvas.onclick = cb;
+        }
+    }
+    const cb = () => {
+        canvas.onclick = null;
+        if (document.fullscreenElement)
+            canvas.requestPointerLock();
+        else
+            canvas.requestFullscreen({ navigationUI: "hide" });
+    }
+    canvas.onclick = cb;
+}

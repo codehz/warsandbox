@@ -3,7 +3,7 @@ const block = @import("./block.zig");
 const chunk = @import("./chunk.zig");
 const map = @import("./map.zig");
 const common = @import("./common.zig");
-const sche = @import("./scheduler.zig");
+const control = @import("./control.zig");
 usingnamespace @import("./utils.zig");
 const C = @import("./components.zig");
 const console = @import("./console.zig");
@@ -67,8 +67,8 @@ const CameraInfo = extern struct {
                 pos.value[0] + vel.value[0] * offset,
                 pos.value[1] + vel.value[1] * offset,
                 pos.value[2] + vel.value[2] * offset,
-                faced.yaw,
-                faced.pitch,
+                faced.yaw + control.info.rotate[0],
+                faced.pitch + control.info.rotate[1],
             };
         }
     }
