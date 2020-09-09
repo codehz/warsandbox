@@ -3,6 +3,7 @@ var status: Record<number, boolean> = {};
 var keydb: Record<number, Callback> = {};
 
 document.addEventListener("mousedown", e => {
+  e.preventDefault();
   const cb = keydb[e.button];
   if (cb && !status[e.button]) {
     status[e.button] = true;
@@ -11,6 +12,7 @@ document.addEventListener("mousedown", e => {
 });
 
 document.addEventListener("mouseup", e => {
+  e.preventDefault();
   const cb = keydb[e.button];
   if (cb && !status[e.button]) {
     status[e.button] = true;
@@ -19,6 +21,7 @@ document.addEventListener("mouseup", e => {
 });
 
 document.addEventListener("keydown", e => {
+  e.preventDefault();
   const cb = keydb[e.keyCode];
   if (cb && !status[e.keyCode]) {
     status[e.keyCode] = true;
@@ -27,6 +30,7 @@ document.addEventListener("keydown", e => {
 });
 
 document.addEventListener("keyup", e => {
+  e.preventDefault();
   const cb = keydb[e.keyCode];
   if (cb) {
     delete status[e.keyCode];
