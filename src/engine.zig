@@ -70,9 +70,9 @@ pub fn Engine(comptime MapType: type) type {
                 // FIXME: use faced
                 // TODO: detect mid-air
                 // TODO: add max spped prop
-                const maxspeed = 0.1;
-                const maxboostspeed = 0.2;
-                const maxboostshiftspeed = 0.08;
+                const maxspeed = 0.2;
+                const maxboostspeed = 0.3;
+                const maxboostshiftspeed = 0.15;
                 const changerate = 0.2;
                 const boostchangerate = 0.1;
                 var iter = self.registry.view(struct { control: *C.ControlByPlayer, pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
