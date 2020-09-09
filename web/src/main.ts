@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import * as utils from "./utils";
-import * as kbd from "./keyboardmanager";
+import * as input from "./inputmanager";
 
 function waitForLoadingManager(mgr: THREE.LoadingManager) {
     return new Promise((resolve, reject) => {
@@ -89,13 +89,16 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     const mgr = utils.getControlMapper(mod.control);
     const kbdm = new utils.KeyboardMapper(mgr);
 
-    kbd.detect([87, 38], o => kbdm.up = o);
-    kbd.detect([83, 40], o => kbdm.down = o);
-    kbd.detect([65, 37], o => kbdm.left = o);
-    kbd.detect([68, 39], o => kbdm.right = o);
-    kbd.detect([32], o => mgr.jump = o);
-    kbd.detect([16], o => mgr.sneak = o);
-    kbd.detect([17], o => mgr.boost = o);
+    input.detect([87, 38], o => kbdm.up = o);
+    input.detect([83, 40], o => kbdm.down = o);
+    input.detect([65, 37], o => kbdm.left = o);
+    input.detect([68, 39], o => kbdm.right = o);
+    input.detect([32], o => mgr.jump = o);
+    input.detect([16], o => mgr.sneak = o);
+    input.detect([17], o => mgr.boost = o);
+    input.detect([0], o => mgr.use1 = o);
+    input.detect([1], o => mgr.use2 = o);
+    input.detect([2], o => mgr.use3 = o);
 
     enterGameMode(renderer.domElement, (o) => paused = !o);
 
