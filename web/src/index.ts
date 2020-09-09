@@ -5,6 +5,8 @@ const renderer = new THREE.WebGLRenderer({
     antialias: true,
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -15,10 +17,21 @@ const scene = new THREE.Scene();
 
 const color = 0xFFFFFF;
 const light = new THREE.DirectionalLight(color, 1);
+light.shadow.mapSize.width = 2048;  // default
+light.shadow.mapSize.height = 2048; // default
+light.shadow.bias = 0;
+light.shadow.camera.near = 0;    // default
+light.shadow.camera.far = 100;     // default
+light.shadow.camera.left = -50;
+light.shadow.camera.right = 20;
+light.shadow.camera.top = 50;
+light.shadow.camera.bottom = -50;
+light.castShadow = true;
 light.position.set(0, 0, 40);
 light.target.position.set(32, 32, 0);
 scene.add(light);
 scene.add(light.target);
+scene.add(new THREE.CameraHelper(light.shadow.camera));
 
 const amblight = new THREE.AmbientLight(color, 0.5);
 scene.add(amblight);

@@ -55,6 +55,8 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
             test.boundingBox = chunkBoundingBox;
             test.boundingSphere = chunkBoundingSphere;
             const tmesh = new THREE.Mesh(test, testtex);
+            tmesh.castShadow = true;
+            tmesh.receiveShadow = true;
             tmesh.position.add(new THREE.Vector3(i * mapInfo.chunkWidth, j * mapInfo.chunkWidth, 0));
             scene.add(tmesh);
         }
