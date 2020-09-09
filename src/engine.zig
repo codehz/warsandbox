@@ -67,7 +67,6 @@ pub fn Engine(comptime MapType: type) type {
             while (true) {
                 suspend;
                 if (flag.*) return;
-                // FIXME: use faced
                 // TODO: detect mid-air
                 // TODO: add max spped prop
                 const maxspeed = 0.2;
