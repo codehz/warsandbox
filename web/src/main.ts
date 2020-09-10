@@ -17,7 +17,7 @@ export async function main(
     const loadingManager = new THREE.LoadingManager();
     const loader = new THREE.TextureLoader(loadingManager);
     const testtex = new THREE.MeshPhongMaterial({
-        map: loader.load("/assets/test.png"),
+        map: loader.load("assets/test.png"),
         side: THREE.FrontSide,
     });
     testtex.map.minFilter = THREE.LinearMipmapLinearFilter;
@@ -26,7 +26,7 @@ export async function main(
 
     console.time("init");
 
-    const mod = await utils.fetchModule("/native/engine.wasm", {});
+    const mod = await utils.fetchModule("native/engine.wasm", {});
     const mapInfo = utils.readMapInfo(mod.mapInfo);
     console.log(mapInfo);
     console.timeLog("init", "fetch");
