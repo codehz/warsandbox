@@ -35,7 +35,6 @@ jobs:
           path: web/native
   build-web:
     runs-on: ubuntu-latest
-    needs: [build-zig]
     
     steps:
       - uses: actions/checkout@v2
@@ -47,11 +46,6 @@ jobs:
         run: |
           cd web
           npm install
-      - name: Grab wasm artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: wasm
-          path: web/native
       - name: Snowpack build
         run: |
           cd web
@@ -70,6 +64,11 @@ jobs:
         with:
           name: build
           path: public
+      - name: Grab wasm artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: public/native
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
