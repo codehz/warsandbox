@@ -5,7 +5,7 @@ on:
     branches: [ OwO ]
 
 jobs:
-  build:
+  build-zig:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,3 +24,20 @@ jobs:
           zig build -Drelease=true
           FILE=web/native/engine.wasm
           test -f "$FILE" || exit 1
+  build-web:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v1.4.3
+        with:
+          node-version: ">= 14.10.0"
+      - name: Install dependencies from package.json
+        run: |
+          cd web
+          npm install
+      - name: Snowpack build
+        run: |
+          cd web
+          npx snowpack build
