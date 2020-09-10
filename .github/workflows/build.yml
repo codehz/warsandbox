@@ -35,7 +35,7 @@ jobs:
           path: web/native
   build-web:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v2
       - name: Setup Node.js environment
@@ -50,6 +50,7 @@ jobs:
         run: |
           cd web
           npx snowpack build
+          ls build
       - name: Upload build
         uses: actions/upload-artifact@v2
         with:
@@ -73,4 +74,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public 
+          publish_dir: ./public
