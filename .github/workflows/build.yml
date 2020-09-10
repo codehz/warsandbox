@@ -24,6 +24,10 @@ jobs:
           zig build -Drelease=true
           FILE=web/native/engine.wasm
           test -f "$FILE" || exit 1
+      - name: Purge obj file
+        run: |
+          cd web/native
+          rm -rf engine.o
       - name: Upload wasm
         uses: actions/upload-artifact@v2
         with:
