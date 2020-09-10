@@ -44,7 +44,7 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     for (let i = 0; i < mapInfo.width; i++) {
         for (let j = 0; j < mapInfo.length; j++) {
             const addr = mod.generateGeomentryDataForChunk(i, j);
-            const exported = utils.readExported(mapInfo, addr);
+            const exported = utils.readMap(mapInfo, addr);
             const interleaveBuffer = exported.data.proxy(new THREE.InterleavedBuffer(exported.data.data, 8));
             const test = new THREE.BufferGeometry();
             const indexBuffer = exported.indices.proxy(new THREE.BufferAttribute(exported.indices.data, 1));

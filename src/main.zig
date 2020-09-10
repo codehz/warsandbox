@@ -108,10 +108,14 @@ var gpa: std.heap.GeneralPurposeAllocator(.{
     .thread_safe = false,
     .safety = false,
 }) = .{};
-export var exported: [width * length]ExportedPosition = undefined;
+var exportedMap: [width * length]ExportedPosition = undefined;
 var testingMap: TestingMap = undefined;
 var player: Entity = undefined;
 var engine: Engine(TestingMap) = undefined;
+
+comptime {
+    @export(exportedMap, .{ .name = "map" });
+}
 
 export fn initEngine() void {
     engine = Engine(TestingMap).init(&gpa.allocator, &testingMap);
@@ -157,7 +161,7 @@ export fn loadSampleMap() bool {
 
 export fn generateGeomentryDataForChunk(x: u8, y: u8) *ExportedPosition {
     const current = testingMap.access(x, y);
-    const ret = &exported[x + y * width];
+    const ret = &exportedMap[x + y * width];
     ret.reset();
     for (range(u8, chunkWidth)) |i| {
         for (range(u8, chunkWidth)) |j| {

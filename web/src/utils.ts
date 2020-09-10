@@ -229,7 +229,7 @@ export class ProxiedArray<T extends ArrayLike<number>> {
     }
 };
 
-export function readExported(info: MapInfo, addr: number) {
+export function readMap(info: MapInfo, addr: number) {
     return {
         data: new ProxiedArray(addr + info.dataOffset, addr, 4, getFloat32BufferFromSlice),
         indices: new ProxiedArray(addr + info.indicesOffset, addr + 4, 4, getUint32BufferFromSlice),
