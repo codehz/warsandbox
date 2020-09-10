@@ -59,6 +59,8 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
             tmesh.receiveShadow = true;
             tmesh.position.add(new THREE.Vector3(i * mapInfo.chunkWidth, j * mapInfo.chunkWidth, 0));
             scene.add(tmesh);
+            var box = new THREE.BoxHelper(tmesh, 0xffff00);
+            scene.add(box);
         }
     }
     console.timeEnd("geo");
