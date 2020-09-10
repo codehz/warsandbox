@@ -166,6 +166,100 @@ pub const AABB = struct {
         return Iterator.init(self);
     }
 };
+pub const Ray3D = struct {
+    origin: Vector3D,
+    direction: Vector3D,
+
+    pub fn getOriginBlockPos(self: *const @This()) BlockPos {
+        return toBlockPos(self.origin);
+    }
+
+    fn mapOrder(order: std.math.Order) i8 {
+        return switch (order) {
+            .lt => -1,
+            .eq => 0,
+            .gt => 1,
+        };
+    }
+
+    fn safeConvert(im: [3]i32) ?BlockPos {
+        var ret: BlockPos = undefined;
+        for (im) |v, i| {
+            if (v < 0 or v > std.math.maxInt(u16)) return null;
+            ret[i] = @intCast(u16, v);
+        }
+        return ret;
+    }
+
+    fn loop(self: *const @This(), state: *Iterator) void {
+        state.stage = 1;
+        defer state.stage = 2;
+        suspend;
+        // output
+        var current = [3]i32{
+            @floatToInt(i32, self.origin[0]),
+            @floatToInt(i32, self.origin[1]),
+            @floatToInt(i32, self.origin[2]),
+        };
+        // internal
+        const diff = [3]f32{
+            self.origin[0] - std.math.floor(self.origin[0]),
+            self.origin[1] - std.math.floor(self.origin[1]),
+            self.origin[2] - std.math.floor(self.origin[2]),
+        };
+        state.current = safeConvert(current).?;
+        // internal
+        const stepF = [3]f32{
+            if (std.math.signbit(self.direction[0])) -1 else 1,
+            if (std.math.signbit(self.direction[1])) -1 else 1,
+            if (std.math.signbit(self.direction[2])) -1 else 1,
+        };
+        const step = [3]i32{
+            @floatToInt(i32, stepF[0]),
+            @floatToInt(i32, stepF[1]),
+            @floatToInt(i32, stepF[2]),
+        };
+        const tdelta = [3]f32{
+            1.0 / self.direction[0],
+            1.0 / self.direction[1],
+            1.0 / self.direction[2],
+        };
+        var tmax = [3]f32{
+            ((stepF[0] + 1) / 2 - (stepF[0] * diff[0])) / self.direction[0],
+            ((stepF[1] + 1) / 2 - (stepF[1] * diff[1])) / self.direction[1],
+            ((stepF[2] + 1) / 2 - (stepF[2] * diff[2])) / self.direction[2],
+        };
+        suspend;
+        while (true) {
+            const mi = utils.minIndex(f32, tmax[0..]);
+            current[mi] += step[mi];
+            tmax[mi] += tdelta[mi];
+            state.current = safeConvert(current) orelse return;
+            suspend;
+        }
+    }
+
+    const Self = @This();
+
+    const Iterator = struct {
+        parent: *const Self,
+        frame: @Frame(loop) = undefined,
+        stage: usize = 0,
+        current: BlockPos = undefined,
+
+        pub fn next(self: *@This()) ?BlockPos {
+            if (self.stage == 2) return null;
+            if (self.stage == 0) self.frame = async self.parent.loop(self);
+            resume self.frame;
+            if (self.stage == 2) return null;
+            return self.current;
+        }
+    };
+
+    pub fn iterator(self: *const @This()) Iterator {
+        return .{ .parent = self };
+    }
+};
 
 pub fn minmax(source: anytype, min: anytype, max: anytype) @TypeOf(source) {
     return std.math.min(std.math.max(source, min), max);
@@ -217,18 +311,18 @@ pub fn morph3d(a: Vector3D, b: Vector3D, t: f32) Vector3D {
     };
 }
 
-pub fn toBlockPos(src: Vector3D) BlockPos {
+pub fn toBlockPos(src: anytype) BlockPos {
     return .{
-        @floatToInt(u16, src[0] - 0.5),
-        @floatToInt(u16, src[1] - 0.5),
-        @floatToInt(u16, src[2] - 0.5),
+        @floatToInt(u16, src[0]),
+        @floatToInt(u16, src[1]),
+        @floatToInt(u16, src[2]),
     };
 }
 
-pub fn toVector3D(src: BlockPos) Vector3D {
+pub fn toVector3D(src: anytype) Vector3D {
     return .{
-        @intToFloat(f32, src[0]) + 0.5,
-        @intToFloat(f32, src[1]) + 0.5,
-        @intToFloat(f32, src[2]) + 0.5,
+        @intToFloat(f32, src[0]),
+        @intToFloat(f32, src[1]),
+        @intToFloat(f32, src[2]),
     };
 }
