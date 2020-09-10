@@ -74,6 +74,7 @@ jobs:
           cd public
           rm -rf .gitignore
           cat >.gitignore <<EOF
+          .gitignore
           package.json
           package-lock.json
           snowpack.config.json
