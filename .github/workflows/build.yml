@@ -67,7 +67,7 @@ jobs:
       - name: Grab wasm artifact
         uses: actions/download-artifact@v2
         with:
-          name: build
+          name: wasm
           path: public/native
       - name: Fix gitignore file
         run: |
