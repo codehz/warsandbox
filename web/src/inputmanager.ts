@@ -14,9 +14,9 @@ document.addEventListener("mousedown", e => {
 document.addEventListener("mouseup", e => {
   e.preventDefault();
   const cb = keydb[e.button];
-  if (cb && !status[e.button]) {
-    status[e.button] = true;
-    cb(true);
+  if (cb) {
+    delete status[e.button];
+    cb(false);
   }
 });
 

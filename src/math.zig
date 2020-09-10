@@ -69,6 +69,14 @@ pub const Bound3D = struct {
         }
     }
 
+    pub fn inbound(self: *const @This(), target: anytype) bool {
+        for (target) |val, dim| {
+            const v = if (@typeInfo(@TypeOf(val)) != .Float) @intToFloat(f32, val) else @floatCast(f32, val);
+            if (v < self.value[dim][0] or v > self.value[dim][1]) return false;
+        }
+        return true;
+    }
+
     pub fn format(self: *const @This(), comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) @TypeOf(writer).Error!void {
         return std.fmt.format(writer, "[<{d:.1}, {d:.1}> <{d:.1}, {d:.1}> <{d:.1}, {d:.1}>]", .{
             self.value[0][0],
@@ -220,14 +228,14 @@ pub const Ray3D = struct {
             @floatToInt(i32, stepF[2]),
         };
         const tdelta = [3]f32{
-            1.0 / self.direction[0],
-            1.0 / self.direction[1],
-            1.0 / self.direction[2],
+            std.math.fabs(1.0 / self.direction[0]),
+            std.math.fabs(1.0 / self.direction[1]),
+            std.math.fabs(1.0 / self.direction[2]),
         };
         var tmax = [3]f32{
-            ((stepF[0] + 1) / 2 - (stepF[0] * diff[0])) / self.direction[0],
-            ((stepF[1] + 1) / 2 - (stepF[1] * diff[1])) / self.direction[1],
-            ((stepF[2] + 1) / 2 - (stepF[2] * diff[2])) / self.direction[2],
+            std.math.fabs(((stepF[0] + 1) / 2 - (stepF[0] * diff[0])) / self.direction[0]),
+            std.math.fabs(((stepF[1] + 1) / 2 - (stepF[1] * diff[1])) / self.direction[1]),
+            std.math.fabs(((stepF[2] + 1) / 2 - (stepF[2] * diff[2])) / self.direction[2]),
         };
         suspend;
         while (true) {
