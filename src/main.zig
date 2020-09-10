@@ -137,9 +137,8 @@ export fn initPlayer() void {
     engine.updater.addFn(CameraInfo.updateCamera, &cameraInfo) catch report("Failed to register camera updater");
 }
 
-export fn tick() bool {
+export fn tick() void {
     engine.update();
-    return true;
 }
 
 export fn microtick(offset: f32) void {
