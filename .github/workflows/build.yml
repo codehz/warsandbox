@@ -63,6 +63,7 @@ jobs:
           path: web/build
   publish:
     runs-on: ubuntu-latest
+    needs: [build-zig, build-web]
     steps:
       - name: Grab build artifact
         uses: actions/download-artifact@v2
