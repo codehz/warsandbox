@@ -51,7 +51,7 @@ const ExportedPosition = extern struct {
 };
 
 const CameraInfo = extern struct {
-    posrot: [5]f32,
+    data: [8]f32,
 
     fn adjustCamera(self: *@This(), offset: f32) void {
         var camIter = engine.registry.view(struct {
@@ -64,12 +64,22 @@ const CameraInfo = extern struct {
             const pos = str.pos;
             const vel = str.vel;
             const faced = str.faced;
-            self.posrot = [_]f32{
+            const highlight = blk: {
+                if (str.control.highlight) |d| {
+                    break :blk toVector3D(d);
+                } else {
+                    break :blk Vector3D{ -1, -1, -1 };
+                }
+            };
+            self.data = [_]f32{
                 pos.value[0] + vel.value[0] * offset,
                 pos.value[1] + vel.value[1] * offset,
                 pos.value[2] + vel.value[2] * offset,
                 faced.yaw + control.info.rotate[0],
                 minmax(faced.pitch + control.info.rotate[1], std.math.pi / -2.0, std.math.pi / 2.0),
+                highlight[0],
+                highlight[1],
+                highlight[2],
             };
         }
     }
@@ -86,7 +96,23 @@ const CameraInfo = extern struct {
             if (camIter.next()) |str| {
                 const pos = str.pos;
                 const faced = str.faced;
-                self.posrot = [_]f32{ pos.value[0], pos.value[1], pos.value[2], faced.yaw, faced.pitch };
+                const highlight = blk: {
+                    if (str.control.highlight) |d| {
+                        break :blk toVector3D(d);
+                    } else {
+                        break :blk Vector3D{ -1, -1, -1 };
+                    }
+                };
+                self.data = [_]f32{
+                    pos.value[0],
+                    pos.value[1],
+                    pos.value[2],
+                    faced.yaw,
+                    faced.pitch,
+                    highlight[0],
+                    highlight[1],
+                    highlight[2],
+                };
             }
         }
     }

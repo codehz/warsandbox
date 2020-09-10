@@ -151,12 +151,14 @@ export function getControlMapper(addr: number) {
 }
 export function readCameraInfo(addr: number): {
     pos: [number, number, number],
-    rot: [number, number]
+    rot: [number, number],
+    highlight: [number, number, number],
 } {
-    const arr = getFloat32BufferFromSlice(addr, 5 * 4);
+    const arr = getFloat32BufferFromSlice(addr, 8 * 4);
     return {
         pos: [arr[0], arr[1], arr[2]],
-        rot: [arr[3], arr[4]]
+        rot: [arr[3], arr[4]],
+        highlight: [arr[5], arr[6], arr[7]]
     };
 }
 

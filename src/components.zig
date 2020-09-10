@@ -11,7 +11,9 @@ pub const Energy = struct { max: f32, value: f32 };
 pub const Targetable = struct {};
 pub const Hostility = struct {};
 pub const Died = struct {};
-pub const ControlByPlayer = struct {};
+pub const ControlByPlayer = struct {
+    highlight: ?BlockPos = null,
+};
 
 pub const Label = struct {
     name: [64]u8,

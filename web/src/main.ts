@@ -9,7 +9,11 @@ function waitForLoadingManager(mgr: THREE.LoadingManager) {
     });
 }
 
-export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: THREE.WebGLRenderer, adjust: () => void) {
+export async function main(
+    scene: THREE.Scene,
+    camera: THREE.Camera,
+    renderer: THREE.WebGLRenderer,
+    adjust: () => void) {
     const loadingManager = new THREE.LoadingManager();
     const loader = new THREE.TextureLoader(loadingManager);
     const testtex = new THREE.MeshPhongMaterial({
@@ -37,8 +41,17 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     // mod.tick();
     console.timeEnd("init");
 
-    const chunkBoundingBox = new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(mapInfo.chunkWidth, mapInfo.chunkWidth, mapInfo.chunkHeight));
-    const chunkBoundingSphere = new THREE.Sphere(new THREE.Vector3((mapInfo.chunkWidth / 2), (mapInfo.chunkWidth / 2), (mapInfo.chunkHeight / 2)), Math.sqrt((mapInfo.chunkWidth / 2) ** 2 + (mapInfo.chunkWidth / 2) ** 2 + (mapInfo.chunkHeight / 2) ** 2));
+    const chunkBoundingBox = new THREE.Box3(
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(mapInfo.chunkWidth, mapInfo.chunkWidth, mapInfo.chunkHeight));
+    const chunkBoundingSphere = new THREE.Sphere(
+        new THREE.Vector3(
+            (mapInfo.chunkWidth / 2),
+            (mapInfo.chunkWidth / 2),
+            (mapInfo.chunkHeight / 2)),
+        ((mapInfo.chunkWidth / 2) ** 2 +
+            (mapInfo.chunkWidth / 2) ** 2 +
+            (mapInfo.chunkHeight / 2) ** 2) ** 0.5);
 
     console.time("geo");
     for (let i = 0; i < mapInfo.width; i++) {
@@ -65,6 +78,17 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
     }
     console.timeEnd("geo");
 
+    var highlight = new THREE.Mesh(
+        new THREE.BoxGeometry(1.001, 1.001, 1.001),
+        new THREE.MeshBasicMaterial({
+            color: 0xFFFFFF,
+            opacity: 0.5,
+            transparent: true,
+            depthWrite: false,
+        }));
+    highlight.renderOrder = 999;
+    scene.add(highlight);
+
     let paused = true;
 
     setInterval(() => {
@@ -84,6 +108,7 @@ export async function main(scene: THREE.Scene, camera: THREE.Camera, renderer: T
         camera.position.set(info.pos[0], info.pos[1], info.pos[2] + 1.7);
         const pitch = info.rot[1];
         const yaw = info.rot[0];
+        highlight.position.set(info.highlight[0] + 0.5, info.highlight[1] + 0.5, info.highlight[2] + 0.5);
         camera.rotation.set(Math.PI / 2 + pitch, 0, yaw, 'YZX');
         camera.matrixWorldNeedsUpdate = true;
         adjust();

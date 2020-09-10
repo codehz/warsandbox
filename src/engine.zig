@@ -101,23 +101,22 @@ pub fn Engine(comptime MapType: type) type {
                     if (control.info.jump) {
                         str.vel.value[2] = 0.2;
                     }
-                    if (control.info.use3) {
-                        // FIXME: use correct height
-                        const sp = std.math.sin(str.faced.pitch);
-                        const cp = std.math.cos(str.faced.pitch);
-                        const ray: Ray3D = .{
-                            .origin = add3d(str.pos.value, Vector3D{ 0, 0, 1.7 }),
-                            .direction = Vector3D{ -s * cp, c * cp, sp },
-                        };
-                        const bound = defaultBound();
-                        var riter = ray.iterator();
-                        while (riter.next()) |blk| {
-                            if (!bound.inbound(blk)) break;
-                            // FIXME: also check entity
-                            if (self.map.accessBlock(blk[0], blk[1], @intCast(u8, blk[2])).solid()) {
-                                // TODO: mark the block;
-                                break;
-                            }
+                    // FIXME: use correct height
+                    const sp = std.math.sin(str.faced.pitch);
+                    const cp = std.math.cos(str.faced.pitch);
+                    const ray: Ray3D = .{
+                        .origin = add3d(str.pos.value, Vector3D{ 0, 0, 1.7 }),
+                        .direction = Vector3D{ -s * cp, c * cp, sp },
+                    };
+                    const bound = defaultBound();
+                    str.control.highlight = null;
+                    var riter = ray.iterator();
+                    while (riter.next()) |blk| {
+                        if (!bound.inbound(blk)) break;
+                        // FIXME: also check entity
+                        if (self.map.accessBlock(blk[0], blk[1], @intCast(u8, blk[2])).solid()) {
+                            str.control.highlight = blk;
+                            break;
                         }
                     }
                 }

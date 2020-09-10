@@ -70,9 +70,16 @@ pub const Bound3D = struct {
     }
 
     pub fn inbound(self: *const @This(), target: anytype) bool {
-        for (target) |val, dim| {
-            const v = if (@typeInfo(@TypeOf(val)) != .Float) @intToFloat(f32, val) else @floatCast(f32, val);
-            if (v < self.value[dim][0] or v > self.value[dim][1]) return false;
+        if (@typeInfo(@TypeOf(target[0])) != .Float) {
+            for (target) |val, dim| {
+                const v = @intToFloat(f32, val);
+                if (v < self.value[dim][0] or v >= self.value[dim][1]) return false;
+            }
+        } else {
+            for (target) |val, dim| {
+                const v = if (@typeInfo(@TypeOf(val)) != .Float) @intToFloat(f32, val) else @floatCast(f32, val);
+                if (v < self.value[dim][0] or v > self.value[dim][1]) return false;
+            }
         }
         return true;
     }
