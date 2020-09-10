@@ -50,7 +50,6 @@ jobs:
         run: |
           cd web
           npx snowpack build
-          ls build
       - name: Upload build
         uses: actions/upload-artifact@v2
         with:
@@ -70,6 +69,8 @@ jobs:
         with:
           name: build
           path: public/native
+      - name: Remove gitignore file
+        run: rm -rf ./public/.gitignore
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
