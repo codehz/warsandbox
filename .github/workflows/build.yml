@@ -69,8 +69,16 @@ jobs:
         with:
           name: build
           path: public/native
-      - name: Remove gitignore file
-        run: rm -rf ./public/.gitignore
+      - name: Fix gitignore file
+        run: |
+          cd public
+          rm -rf .gitignore
+          cat >.gitignore <<EOF
+          package.json
+          package-lock.json
+          snowpack.config.json
+          tsconfig.json
+          EOF
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
