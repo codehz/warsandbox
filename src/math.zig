@@ -353,10 +353,10 @@ pub fn toVector3D(src: anytype) Vector3D {
 
 pub const DirEnum = extern enum(i32) {
     invalid = -1,
-    right = 0, //
+    right = 0,
     left = 1,
     back = 2,
-    front = 3, //
+    front = 3,
     top = 4,
     bottom = 5,
 };
