@@ -78,16 +78,29 @@ export async function main(
     }
     console.timeEnd("geo");
 
-    var highlight = new THREE.Mesh(
+    const highlight = new THREE.Mesh(
         new THREE.BoxGeometry(1.001, 1.001, 1.001),
         new THREE.MeshBasicMaterial({
             color: 0xFFFFFF,
             opacity: 0.5,
             transparent: true,
             depthWrite: false,
+            vertexColors: true,
         }));
-    highlight.renderOrder = 999;
+    highlight.renderOrder = 998;
     scene.add(highlight);
+
+    // const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
+    //     new THREE.MeshBasicMaterial({
+    //         color: 0xFF00FF,
+    //         opacity: 0.2,
+    //         transparent: true,
+    //         depthWrite: false,
+    //         side: THREE.DoubleSide,
+    //     })
+    // );
+    // plane.renderOrder = 999;
+    // scene.add(plane);
 
     let paused = true;
 
@@ -108,7 +121,8 @@ export async function main(
         camera.position.set(info.pos[0], info.pos[1], info.pos[2] + 1.7);
         const pitch = info.rot[1];
         const yaw = info.rot[0];
-        highlight.position.set(info.highlight[0] + 0.5, info.highlight[1] + 0.5, info.highlight[2] + 0.5);
+        // highlight.position.set(info.highlight[0] + 0.5, info.highlight[1] + 0.5, info.highlight[2] + 0.5);
+        placePlane(highlight, info.highlight, info.selectedFace);
         camera.rotation.set(Math.PI / 2 + pitch, 0, yaw, 'YZX');
         camera.matrixWorldNeedsUpdate = true;
         adjust();
@@ -135,6 +149,21 @@ export async function main(
         if (paused) return;
         mgr.rotate = [-e.movementX / 100, -e.movementY / 100];
     }
+}
+
+function placePlane(plane: THREE.Mesh<THREE.BoxGeometry>, pos: [number, number, number], face: number) {
+    plane.position.set(pos[0] + 0.5, pos[1] + 0.5, pos[2] + 0.5);
+    if (face > 5) return;
+    for (let i = 0; i < 6; i++) {
+        if (i != face) {
+            plane.geometry.faces[i * 2].color.setHex(0x00FF00);
+            plane.geometry.faces[i * 2 + 1].color.setHex(0x00FF00);
+        } else {
+            plane.geometry.faces[i * 2].color.setHex(0xFF00FF);
+            plane.geometry.faces[i * 2 + 1].color.setHex(0xFF00FF);
+        }
+    }
+    plane.geometry.colorsNeedUpdate = true;
 }
 
 function enterGameMode(f: (f: boolean) => void) {

@@ -229,10 +229,10 @@ pub const Ray3D = struct {
             if (std.math.signbit(self.direction[1])) -1 else 1,
             if (std.math.signbit(self.direction[2])) -1 else 1,
         };
-        const step = [3]i32{
-            @floatToInt(i32, stepF[0]),
-            @floatToInt(i32, stepF[1]),
-            @floatToInt(i32, stepF[2]),
+        const step = Dir3D{
+            @floatToInt(i2, stepF[0]),
+            @floatToInt(i2, stepF[1]),
+            @floatToInt(i2, stepF[2]),
         };
         const tdelta = [3]f32{
             std.math.fabs(1.0 / self.direction[0]),
@@ -248,6 +248,8 @@ pub const Ray3D = struct {
         while (true) {
             const mi = utils.minIndex(f32, tmax[0..]);
             current[mi] += step[mi];
+            state.face = Dir3D{ 0, 0, 0 };
+            state.face[mi] = -step[mi];
             state.time = tmax[mi];
             tmax[mi] += tdelta[mi];
             state.current = safeConvert(current) orelse return;
@@ -262,6 +264,7 @@ pub const Ray3D = struct {
         frame: @Frame(loop) = undefined,
         stage: usize = 0,
         time: f32 = 0,
+        face: Dir3D = Dir3D{ 0, 0, 0 },
         current: BlockPos = undefined,
 
         pub fn next(self: *@This()) ?BlockPos {
@@ -346,4 +349,26 @@ pub fn toVector3D(src: anytype) Vector3D {
         @intToFloat(f32, src[1]),
         @intToFloat(f32, src[2]),
     };
+}
+
+pub const DirEnum = extern enum(i32) {
+    invalid = -1,
+    right = 0, //
+    left = 1,
+    back = 2,
+    front = 3, //
+    top = 4,
+    bottom = 5,
+};
+
+pub fn dir2Enum(dir: ?Dir3D) DirEnum {
+    if (dir) |d| {
+        if (d[0] == -1) return .left;
+        if (d[0] == 1) return .right;
+        if (d[1] == -1) return .front;
+        if (d[1] == 1) return .back;
+        if (d[2] == -1) return .bottom;
+        if (d[2] == 1) return .top;
+    }
+    return .invalid;
 }

@@ -52,6 +52,7 @@ const ExportedPosition = extern struct {
 
 const CameraInfo = extern struct {
     data: [8]f32,
+    selectedFace: DirEnum,
 
     fn adjustCamera(self: *@This(), offset: f32) void {
         var camIter = engine.registry.view(struct {
@@ -81,6 +82,7 @@ const CameraInfo = extern struct {
                 highlight[1],
                 highlight[2],
             };
+            self.selectedFace = dir2Enum(str.control.selectedDirection);
         }
     }
 

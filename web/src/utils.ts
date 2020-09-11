@@ -153,12 +153,15 @@ export function readCameraInfo(addr: number): {
     pos: [number, number, number],
     rot: [number, number],
     highlight: [number, number, number],
+    selectedFace: number
 } {
     const arr = getFloat32BufferFromSlice(addr, 8 * 4);
+    const iarr = getUint32BufferFromSlice(addr + 8 * 4, 4);
     return {
         pos: [arr[0], arr[1], arr[2]],
         rot: [arr[3], arr[4]],
-        highlight: [arr[5], arr[6], arr[7]]
+        highlight: [arr[5], arr[6], arr[7]],
+        selectedFace: iarr[0],
     };
 }
 

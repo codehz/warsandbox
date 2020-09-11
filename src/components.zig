@@ -13,6 +13,7 @@ pub const Hostility = struct {};
 pub const Died = struct {};
 pub const ControlByPlayer = struct {
     highlight: ?BlockPos = null,
+    selectedDirection: ?Dir3D = null,
 };
 
 pub const Label = struct {

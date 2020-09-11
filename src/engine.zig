@@ -110,6 +110,7 @@ pub fn Engine(comptime MapType: type) type {
                     };
                     const bound = defaultBound();
                     str.control.highlight = null;
+                    str.control.selectedDirection = null;
                     var riter = ray.iterator();
                     while (riter.next()) |blk| {
                         // FIXME: use config value
@@ -118,6 +119,7 @@ pub fn Engine(comptime MapType: type) type {
                         // FIXME: also check entity
                         if (self.map.accessBlock(blk[0], blk[1], @intCast(u8, blk[2])).solid()) {
                             str.control.highlight = blk;
+                            str.control.selectedDirection = riter.face;
                             break;
                         }
                     }
