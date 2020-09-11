@@ -182,57 +182,59 @@ export interface MapInfo {
     chunkHeight: number,
     width: number,
     length: number,
+    versionOffset: number,
     dataOffset: number,
     dataSize: number,
     indicesOffset: number,
     indicesSize: number,
     size: number,
-    dirtymap(): number[],
 };
 
 export function readMapInfo(addr: number): MapInfo {
     const basic = readStdLayoutStruct(addr, "chunkWidth", "chunkHeight", "width", "length");
-    const dataOffset = 8;
+    const versionOffset = 8;
+    const dataOffset = 12;
     const dataSize = basic.chunkWidth * basic.chunkWidth * basic.chunkHeight * 192 * 4;
     const indicesOffset = dataOffset + dataSize;
     const indicesSize = basic.chunkWidth * basic.chunkWidth * basic.chunkHeight * 6 * 6 * 4;
     const size = indicesOffset + indicesOffset;
     return Object.assign({}, basic, {
+        versionOffset,
         dataOffset,
         dataSize,
         indicesOffset,
         indicesSize,
         size,
-        dirtymap() {
-            const data = getUint8BufferFromSlice(addr + 4 * 4, basic.width * basic.length);
-            const ret = []
-            for (let i = 0; i < data.length; i++) {
-                if (data[i] != 0) {
-                    ret.push(i);
-                    data[i] = 0;
-                }
-            }
-            return ret;
-        }
     });
 }
 
 export class ProxiedArray<T extends ArrayLike<number>> {
     private addr: number;
+    private versionAddr: number;
     private countAddr: number;
+    private maxCount: number;
     private base: number;
     private builder: (addr: number, len: number) => T;
 
-    constructor(addr: number, countAddr: number, base: number, builder: (addr: number, len: number) => T) {
+    constructor(addr: number, versionAddr: number, countAddr: number, base: number, maxCount: number, builder: (addr: number, len: number) => T) {
         this.addr = addr;
+        this.versionAddr = versionAddr;
         this.countAddr = countAddr;
         this.base = base;
+        this.maxCount = maxCount;
         this.builder = builder;
     }
 
+    get version() {
+        return readUint32(this.versionAddr);
+    }
+
+    get count() {
+        return readUint32(this.countAddr);
+    }
+
     get data() {
-        const len = readUint32(this.countAddr);
-        return this.builder(this.addr, len * this.base);
+        return this.builder(this.addr, this.maxCount);
     }
 
     proxy<R extends { array: ArrayLike<number> }>(target: R): R {
@@ -242,13 +244,28 @@ export class ProxiedArray<T extends ArrayLike<number>> {
                 return self.data;
             }
         });
+        Object.defineProperty(target, "count", {
+            get() {
+                return self.count;
+            }
+        });
+        Object.defineProperty(target, "length", {
+            get() {
+                return this.maxCount;
+            }
+        });
+        Object.defineProperty(target, "version", {
+            get() {
+                return self.version;
+            }
+        });
         return target;
     }
 };
 
 export function readMap(info: MapInfo, addr: number) {
     return {
-        data: new ProxiedArray(addr + info.dataOffset, addr, 4, getFloat32BufferFromSlice),
-        indices: new ProxiedArray(addr + info.indicesOffset, addr + 4, 4, getUint32BufferFromSlice),
+        data: new ProxiedArray(addr + info.dataOffset, addr + info.versionOffset, addr, 4, info.dataSize, getFloat32BufferFromSlice),
+        indices: new ProxiedArray(addr + info.indicesOffset, addr + info.versionOffset, addr + 4, 4, info.indicesSize, getUint32BufferFromSlice),
     };
 }

@@ -24,12 +24,12 @@ const MapInfo = extern struct {
     chunkHeight: usize = chunkHeight,
     width: usize = width,
     length: usize = length,
-    dirtyMap: [width * length]bool = [1]bool{false} ** (width * length),
 };
 
 const ExportedPosition = extern struct {
     dataCount: u32,
     indicesCount: u32,
+    version: u32 = 0,
     data: [chunkWidth * chunkWidth * chunkHeight * 192]f32,
     indices: [chunkWidth * chunkWidth * chunkHeight * 6 * 6]u32,
 
@@ -67,8 +67,9 @@ const CameraInfo = extern struct {
             const vel = str.vel;
             const faced = str.faced;
             const highlight = blk: {
-                if (str.control.highlight) |d| {
-                    break :blk toVector3D(d);
+                if (str.control.selected) |d| {
+                    self.selectedFace = dir2Enum(d.direction);
+                    break :blk toVector3D(d.pos);
                 } else {
                     break :blk Vector3D{ -1, -1, -1 };
                 }
@@ -83,7 +84,6 @@ const CameraInfo = extern struct {
                 highlight[1],
                 highlight[2],
             };
-            self.selectedFace = dir2Enum(str.control.selectedDirection);
         }
     }
 
@@ -100,8 +100,8 @@ const CameraInfo = extern struct {
                 const pos = str.pos;
                 const faced = str.faced;
                 const highlight = blk: {
-                    if (str.control.highlight) |d| {
-                        break :blk toVector3D(d);
+                    if (str.control.selected) |d| {
+                        break :blk toVector3D(d.pos);
                     } else {
                         break :blk Vector3D{ -1, -1, -1 };
                     }
@@ -171,7 +171,8 @@ export fn tick() void {
     for (testingMap.chunks) |*current, i| {
         if (current.dirty) {
             generateGeomentryData(current, &exportedMap[i]);
-            mapInfo.dirtyMap[i] = true;
+            exportedMap[i].version +%= 1;
+            current.dirty = false;
         }
     }
 }

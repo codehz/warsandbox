@@ -109,8 +109,7 @@ pub fn Engine(comptime MapType: type) type {
                         .direction = Vector3D{ -s * cp, c * cp, sp },
                     };
                     const bound = defaultBound();
-                    str.control.highlight = null;
-                    str.control.selectedDirection = null;
+                    str.control.selected = null;
                     var riter = ray.iterator();
                     while (riter.next()) |blk| {
                         // FIXME: use config value
@@ -118,19 +117,36 @@ pub fn Engine(comptime MapType: type) type {
                         if (!bound.inbound(blk)) break;
                         // FIXME: also check entity
                         if (self.map.accessBlock(blk[0], blk[1], @intCast(u8, blk[2])).solid()) {
-                            str.control.highlight = blk;
-                            str.control.selectedDirection = riter.face;
+                            str.control.selected = C.ControlByPlayer.Selected{
+                                .pos = blk,
+                                .direction = riter.face,
+                            };
                             break;
                         }
                     }
-                    if (str.control.highlight) |blk| {
+                    if (str.control.selected) |selected| {
                         if (control.info.use1) {
                             // FIXME: add break time
                             // FIXME: check game mode, only builder mode can break block directly
-                            const proxy = self.map.accessChunk(blk[0], blk[1]);
-                            proxy.chunk.access(proxy.mx, proxy.my, @intCast(u8, blk[2])).setAir();
+                            const x = selected.pos[0];
+                            const y = selected.pos[1];
+                            const z = @intCast(u8, selected.pos[2]);
+                            const proxy = self.map.accessChunk(x, y);
+                            proxy.chunk.access(proxy.mx, proxy.my, z).setAir();
                             proxy.chunk.dirty = true;
-                            str.control.highlight = null;
+                            str.control.selected = null;
+                            control.info.use1 = false;
+                        } else if (control.info.use3) {
+                            // FIXME: check game mode
+                            // FIXME: check and use selected block
+                            const x = @intCast(u16, @intCast(i32, selected.pos[0]) + @intCast(i32, selected.direction[0]));
+                            const y = @intCast(u16, @intCast(i32, selected.pos[1]) + @intCast(i32, selected.direction[1]));
+                            const z = @intCast(u8, @intCast(i16, selected.pos[2]) + @intCast(i16, selected.direction[2]));
+                            const proxy = self.map.accessChunk(x, y);
+                            proxy.chunk.access(proxy.mx, proxy.my, z).setBlock();
+                            proxy.chunk.dirty = true;
+                            str.control.selected = null;
+                            control.info.use3 = false;
                         }
                     }
                 }

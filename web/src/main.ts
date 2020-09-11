@@ -99,9 +99,12 @@ export async function main(
         mod.tick();
         const info = utils.readCameraInfo(mod.cameraInfo);
         placePlane(highlight, info.highlight, info.selectedFace);
-        for (const ci of mapInfo.dirtymap()) {
-            chunkMeshs[ci].geometry.attributes.position.needsUpdate = true;
-        }
+        // for (const ci of mapInfo.dirtymap()) {
+        //     chunkMeshs[ci].geometry.index.needsUpdate = true;
+        //     chunkMeshs[ci].geometry.attributes.position.needsUpdate = true;
+        //     chunkMeshs[ci].geometry.attributes.normal.needsUpdate = true;
+        //     chunkMeshs[ci].geometry.attributes.uv.needsUpdate = true;
+        // }
         ftime = +new Date();
     }, 50);
     mod.tick();

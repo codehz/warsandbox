@@ -12,8 +12,11 @@ pub const Targetable = struct {};
 pub const Hostility = struct {};
 pub const Died = struct {};
 pub const ControlByPlayer = struct {
-    highlight: ?BlockPos = null,
-    selectedDirection: ?Dir3D = null,
+    pub const Selected = struct {
+        pos: BlockPos,
+        direction: Dir3D,
+    };
+    selected: ?Selected = null,
 };
 
 pub const Label = struct {

@@ -8,6 +8,10 @@ pub const TestingBlock = struct {
         self.isAir = true;
     }
 
+    pub fn setBlock(self: *@This()) void {
+        self.isAir = false;
+    }
+
     pub fn init() @This() {
         return .{};
     }
