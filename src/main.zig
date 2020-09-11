@@ -16,7 +16,7 @@ pub const log_level = .debug;
 const chunkWidth = 16;
 const chunkHeight = 32;
 const width = 2;
-const length = 4;
+const length = 8;
 const TestingMap = map.Map(chunk.Chunk(block.SimpleBlock, chunkWidth, chunkHeight), width, length);
 
 const MapInfo = extern struct {
