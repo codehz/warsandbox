@@ -213,14 +213,12 @@ export class ProxiedArray<T extends ArrayLike<number>> {
     private versionAddr: number;
     private countAddr: number;
     private maxCount: number;
-    private base: number;
     private builder: (addr: number, len: number) => T;
 
-    constructor(addr: number, versionAddr: number, countAddr: number, base: number, maxCount: number, builder: (addr: number, len: number) => T) {
+    constructor(addr: number, versionAddr: number, countAddr: number, maxCount: number, builder: (addr: number, len: number) => T) {
         this.addr = addr;
         this.versionAddr = versionAddr;
         this.countAddr = countAddr;
-        this.base = base;
         this.maxCount = maxCount;
         this.builder = builder;
     }
@@ -265,7 +263,7 @@ export class ProxiedArray<T extends ArrayLike<number>> {
 
 export function readMap(info: MapInfo, addr: number) {
     return {
-        data: new ProxiedArray(addr + info.dataOffset, addr + info.versionOffset, addr, 4, info.dataSize, getFloat32BufferFromSlice),
-        indices: new ProxiedArray(addr + info.indicesOffset, addr + info.versionOffset, addr + 4, 4, info.indicesSize, getUint32BufferFromSlice),
+        data: new ProxiedArray(addr + info.dataOffset, addr + info.versionOffset, addr, info.dataSize, getFloat32BufferFromSlice),
+        indices: new ProxiedArray(addr + info.indicesOffset, addr + info.versionOffset, addr + 4, info.indicesSize, getUint32BufferFromSlice),
     };
 }
