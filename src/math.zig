@@ -248,6 +248,7 @@ pub const Ray3D = struct {
         while (true) {
             const mi = utils.minIndex(f32, tmax[0..]);
             current[mi] += step[mi];
+            state.time = tmax[mi];
             tmax[mi] += tdelta[mi];
             state.current = safeConvert(current) orelse return;
             suspend;
@@ -260,6 +261,7 @@ pub const Ray3D = struct {
         parent: *const Self,
         frame: @Frame(loop) = undefined,
         stage: usize = 0,
+        time: f32 = 0,
         current: BlockPos = undefined,
 
         pub fn next(self: *@This()) ?BlockPos {
@@ -316,6 +318,10 @@ pub fn sub3d(a: anytype, b: anytype) blk: {
     break :blk @TypeOf(a);
 } {
     return .{ a[0] - b[0], a[1] - b[1], a[2] - b[2] };
+}
+
+pub fn distance3d(v: Vector3D) f32 {
+    return std.math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
 
 pub fn morph3d(a: Vector3D, b: Vector3D, t: f32) Vector3D {

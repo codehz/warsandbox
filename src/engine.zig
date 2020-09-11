@@ -112,6 +112,8 @@ pub fn Engine(comptime MapType: type) type {
                     str.control.highlight = null;
                     var riter = ray.iterator();
                     while (riter.next()) |blk| {
+                        // FIXME: use config value
+                        if (riter.time > 5) break;
                         if (!bound.inbound(blk)) break;
                         // FIXME: also check entity
                         if (self.map.accessBlock(blk[0], blk[1], @intCast(u8, blk[2])).solid()) {
