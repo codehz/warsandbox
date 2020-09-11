@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import * as utils from "./utils";
 import * as input from "./inputmanager";
+import { VoxelTextureManager } from "./texture";
 
 function waitForLoadingManager(mgr: THREE.LoadingManager) {
     return new Promise((resolve, reject) => {
@@ -14,15 +15,15 @@ export async function main(
     camera: THREE.Camera,
     renderer: THREE.WebGLRenderer,
     adjust: () => void) {
-    const loadingManager = new THREE.LoadingManager();
-    const loader = new THREE.TextureLoader(loadingManager);
-    const testtex = new THREE.MeshPhongMaterial({
-        map: loader.load("assets/test.png"),
+    const loader = new VoxelTextureManager(4, 16);
+    await loader.add("assets/bedrock.png");
+    await loader.add("assets/test.png");
+    const testtex = new THREE.MeshToonMaterial({
+        map: loader.getTexture(),
         side: THREE.FrontSide,
     });
     testtex.map.minFilter = THREE.LinearMipmapLinearFilter;
     testtex.map.magFilter = THREE.NearestFilter;
-    await waitForLoadingManager(loadingManager);
 
     console.time("init");
 

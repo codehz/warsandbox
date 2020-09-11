@@ -16,3 +16,23 @@ pub const TestingBlock = struct {
         return .{};
     }
 };
+
+pub const SimpleBlock = struct {
+    id: u16 = 0,
+
+    pub fn solid(self: *const @This()) bool {
+        return self.id != 0;
+    }
+
+    pub fn setAir(self: *@This()) void {
+        self.id = 0;
+    }
+
+    pub fn setBlock(self: *@This()) void {
+        self.id = 1;
+    }
+
+    pub fn init() @This() {
+        return .{};
+    }
+};

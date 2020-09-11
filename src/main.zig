@@ -17,7 +17,7 @@ const chunkWidth = 16;
 const chunkHeight = 32;
 const width = 2;
 const length = 4;
-const TestingMap = map.Map(chunk.Chunk(block.TestingBlock, chunkWidth, chunkHeight), width, length);
+const TestingMap = map.Map(chunk.Chunk(block.SimpleBlock, chunkWidth, chunkHeight), width, length);
 
 const MapInfo = extern struct {
     chunkWidth: usize = chunkWidth,
@@ -187,11 +187,13 @@ export fn loadSampleMap() bool {
     for (range(u16, width * chunkWidth)) |i| {
         for (range(u16, length * chunkWidth)) |j| {
             for (range(u8, 8)) |k| {
-                testingMap.accessBlock(i, j, k).*.isAir = prng.random.float(f32) > (1 - @intToFloat(f32, k) / 8);
+                testingMap.accessBlock(i, j, k).id = prng.random.uintAtMost(u16, 2);
+                // testingMap.accessBlock(i, j, k).id =
+                // testingMap.accessBlock(i, j, k).*.isAir = prng.random.float(f32) > (1 - @intToFloat(f32, k) / 8);
             }
         }
     }
-    return testingMap.accessBlock(0, 0, 0).*.isAir;
+    return true;
 }
 
 fn generateGeomentryData(current: *TestingMap.ChunkType, exp: *ExportedPosition) void {
@@ -199,10 +201,10 @@ fn generateGeomentryData(current: *TestingMap.ChunkType, exp: *ExportedPosition)
     for (range(u8, chunkWidth)) |i| {
         for (range(u8, chunkWidth)) |j| {
             for (range(u8, chunkHeight)) |k| {
-                if (!current.access(i, j, k).isAir) {
+                if (current.access(i, j, k).solid()) {
                     for (rangeEnum(common.Direction)) |dir| {
                         if (current.accessNeighbor(i, j, k, dir)) |neighbor| {
-                            if (!neighbor.isAir) continue;
+                            if (neighbor.solid()) continue;
                         }
                         exp.push(8, common.fillRect([_]u32{ i, j, k }, dir, [_]f32{ 0, 0, 1 }), [_]u32{ 0, 1, 2, 2, 1, 3 });
                     }
