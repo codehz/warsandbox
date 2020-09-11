@@ -7,6 +7,7 @@ pub fn Chunk(comptime mBlockType: type, mWidth: u8, mHeight: u8) type {
         pub const height: usize = mHeight;
 
         data: [width * width * height]BlockType = undefined,
+        dirty: bool = false,
 
         pub fn init() @This() {
             var ret: @This() = .{};

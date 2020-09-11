@@ -123,6 +123,16 @@ pub fn Engine(comptime MapType: type) type {
                             break;
                         }
                     }
+                    if (str.control.highlight) |blk| {
+                        if (control.info.use1) {
+                            // FIXME: add break time
+                            // FIXME: check game mode, only builder mode can break block directly
+                            const proxy = self.map.accessChunk(blk[0], blk[1]);
+                            proxy.chunk.access(proxy.mx, proxy.my, @intCast(u8, blk[2])).setAir();
+                            proxy.chunk.dirty = true;
+                            str.control.highlight = null;
+                        }
+                    }
                 }
             }
         }

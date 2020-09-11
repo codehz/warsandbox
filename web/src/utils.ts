@@ -187,6 +187,7 @@ export interface MapInfo {
     indicesOffset: number,
     indicesSize: number,
     size: number,
+    dirtymap(): number[],
 };
 
 export function readMapInfo(addr: number): MapInfo {
@@ -201,7 +202,18 @@ export function readMapInfo(addr: number): MapInfo {
         dataSize,
         indicesOffset,
         indicesSize,
-        size
+        size,
+        dirtymap() {
+            const data = getUint8BufferFromSlice(addr + 4 * 4, basic.width * basic.length);
+            const ret = []
+            for (let i = 0; i < data.length; i++) {
+                if (data[i] != 0) {
+                    ret.push(i);
+                    data[i] = 0;
+                }
+            }
+            return ret;
+        }
     });
 }
 

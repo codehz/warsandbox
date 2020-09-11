@@ -4,6 +4,10 @@ pub const TestingBlock = struct {
         return !self.isAir;
     }
 
+    pub fn setAir(self: *@This()) void {
+        self.isAir = true;
+    }
+
     pub fn init() @This() {
         return .{};
     }

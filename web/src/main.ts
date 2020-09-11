@@ -54,8 +54,9 @@ export async function main(
             (mapInfo.chunkHeight / 2) ** 2) ** 0.5);
 
     console.time("geo");
-    for (let i = 0; i < mapInfo.width; i++) {
-        for (let j = 0; j < mapInfo.length; j++) {
+    const chunkMeshs: THREE.Mesh<THREE.BufferGeometry>[] = [];
+    for (let j = 0; j < mapInfo.length; j++) {
+        for (let i = 0; i < mapInfo.width; i++) {
             const addr = mod.generateGeomentryDataForChunk(i, j);
             const exported = utils.readMap(mapInfo, addr);
             const interleaveBuffer = exported.data.proxy(new THREE.InterleavedBuffer(exported.data.data, 8));
@@ -72,6 +73,7 @@ export async function main(
             tmesh.receiveShadow = true;
             tmesh.position.add(new THREE.Vector3(i * mapInfo.chunkWidth, j * mapInfo.chunkWidth, 0));
             scene.add(tmesh);
+            chunkMeshs.push(tmesh);
             var box = new THREE.BoxHelper(tmesh, 0xffff00);
             scene.add(box);
         }
@@ -90,23 +92,16 @@ export async function main(
     highlight.renderOrder = 998;
     scene.add(highlight);
 
-    // const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
-    //     new THREE.MeshBasicMaterial({
-    //         color: 0xFF00FF,
-    //         opacity: 0.2,
-    //         transparent: true,
-    //         depthWrite: false,
-    //         side: THREE.DoubleSide,
-    //     })
-    // );
-    // plane.renderOrder = 999;
-    // scene.add(plane);
-
     let paused = true;
 
     setInterval(() => {
         if (paused) return;
-        mod.tick()
+        mod.tick();
+        const info = utils.readCameraInfo(mod.cameraInfo);
+        placePlane(highlight, info.highlight, info.selectedFace);
+        for (const ci of mapInfo.dirtymap()) {
+            chunkMeshs[ci].geometry.attributes.position.needsUpdate = true;
+        }
         ftime = +new Date();
     }, 50);
     mod.tick();
@@ -121,8 +116,6 @@ export async function main(
         camera.position.set(info.pos[0], info.pos[1], info.pos[2] + 1.7);
         const pitch = info.rot[1];
         const yaw = info.rot[0];
-        // highlight.position.set(info.highlight[0] + 0.5, info.highlight[1] + 0.5, info.highlight[2] + 0.5);
-        placePlane(highlight, info.highlight, info.selectedFace);
         camera.rotation.set(Math.PI / 2 + pitch, 0, yaw, 'YZX');
         camera.matrixWorldNeedsUpdate = true;
         adjust();

@@ -24,6 +24,7 @@ const MapInfo = extern struct {
     chunkHeight: usize = chunkHeight,
     width: usize = width,
     length: usize = length,
+    dirtyMap: [width * length]bool = [1]bool{false} ** (width * length),
 };
 
 const ExportedPosition = extern struct {
@@ -167,6 +168,12 @@ export fn initPlayer() void {
 
 export fn tick() void {
     engine.update();
+    for (testingMap.chunks) |*current, i| {
+        if (current.dirty) {
+            generateGeomentryData(current, &exportedMap[i]);
+            mapInfo.dirtyMap[i] = true;
+        }
+    }
 }
 
 export fn microtick(offset: f32) void {
@@ -186,10 +193,8 @@ export fn loadSampleMap() bool {
     return testingMap.accessBlock(0, 0, 0).*.isAir;
 }
 
-export fn generateGeomentryDataForChunk(x: u8, y: u8) *ExportedPosition {
-    const current = testingMap.access(x, y);
-    const ret = &exportedMap[x + y * width];
-    ret.reset();
+fn generateGeomentryData(current: *TestingMap.ChunkType, exp: *ExportedPosition) void {
+    exp.reset();
     for (range(u8, chunkWidth)) |i| {
         for (range(u8, chunkWidth)) |j| {
             for (range(u8, chunkHeight)) |k| {
@@ -198,11 +203,17 @@ export fn generateGeomentryDataForChunk(x: u8, y: u8) *ExportedPosition {
                         if (current.accessNeighbor(i, j, k, dir)) |neighbor| {
                             if (!neighbor.isAir) continue;
                         }
-                        ret.push(8, common.fillRect([_]u32{ i, j, k }, dir, [_]f32{ 0, 0, 1 }), [_]u32{ 0, 1, 2, 2, 1, 3 });
+                        exp.push(8, common.fillRect([_]u32{ i, j, k }, dir, [_]f32{ 0, 0, 1 }), [_]u32{ 0, 1, 2, 2, 1, 3 });
                     }
                 }
             }
         }
     }
+}
+
+export fn generateGeomentryDataForChunk(x: u8, y: u8) *ExportedPosition {
+    const current = testingMap.access(x, y);
+    const ret = &exportedMap[x + y * width];
+    generateGeomentryData(current, ret);
     return ret;
 }
