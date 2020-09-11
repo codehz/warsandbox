@@ -3,26 +3,19 @@ import * as utils from "./utils";
 import * as input from "./inputmanager";
 import { VoxelTextureManager } from "./texture";
 
-function waitForLoadingManager(mgr: THREE.LoadingManager) {
-    return new Promise((resolve, reject) => {
-        mgr.onLoad = resolve;
-        mgr.onError = reject;
-    });
-}
-
 export async function main(
     scene: THREE.Scene,
     camera: THREE.Camera,
     renderer: THREE.WebGLRenderer,
     adjust: () => void) {
-    const loader = new VoxelTextureManager(4, 16);
+    const loader = new VoxelTextureManager(2, 16);
     await loader.add("assets/bedrock.png");
     await loader.add("assets/test.png");
-    const testtex = new THREE.MeshToonMaterial({
+    const testtex = new THREE.MeshStandardMaterial({
         map: loader.getTexture(),
         side: THREE.FrontSide,
     });
-    testtex.map.minFilter = THREE.LinearMipmapLinearFilter;
+    testtex.map.minFilter = THREE.NearestFilter;
     testtex.map.magFilter = THREE.NearestFilter;
 
     console.time("init");
@@ -100,12 +93,6 @@ export async function main(
         mod.tick();
         const info = utils.readCameraInfo(mod.cameraInfo);
         placePlane(highlight, info.highlight, info.selectedFace);
-        // for (const ci of mapInfo.dirtymap()) {
-        //     chunkMeshs[ci].geometry.index.needsUpdate = true;
-        //     chunkMeshs[ci].geometry.attributes.position.needsUpdate = true;
-        //     chunkMeshs[ci].geometry.attributes.normal.needsUpdate = true;
-        //     chunkMeshs[ci].geometry.attributes.uv.needsUpdate = true;
-        // }
         ftime = +new Date();
     }, 50);
     mod.tick();

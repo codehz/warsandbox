@@ -1,3 +1,5 @@
+const std = @import("std");
+
 pub const TestingBlock = struct {
     isAir: bool = true,
     pub fn solid(self: *const @This()) bool {

@@ -7,14 +7,15 @@ pub const Direction = enum {
     Forward,
 };
 
-pub fn fillRect(origin: [3]u32, dir: Direction, uvbase: [3]f32) [8 * 4]f32 {
+pub fn fillRect(origin: [3]u32, dir: Direction, uvbase: [3]u16) [8 * 4]f32 {
     const x = @intToFloat(f32, origin[0]);
     const y = @intToFloat(f32, origin[1]);
     const z = @intToFloat(f32, origin[2]);
-    const u_1 = uvbase[0];
-    const v_1 = uvbase[1];
-    const u_2 = uvbase[0] + uvbase[2];
-    const v_2 = uvbase[1] + uvbase[2];
+    const uv_scale: f32 = 1 / @intToFloat(f32, uvbase[2]);
+    const u_1 = @intToFloat(f32, uvbase[0]) * uv_scale;
+    const v_1 = @intToFloat(f32, uvbase[1]) * uv_scale;
+    const u_2 = u_1 + uv_scale;
+    const v_2 = v_1 + uv_scale;
 
     return switch (dir) {
         .Down => [_]f32{

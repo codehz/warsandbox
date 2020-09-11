@@ -131,6 +131,9 @@ fn reportError(comptime str: []const u8, e: anytype) noreturn {
     unreachable;
 }
 
+export const blockTextureCount = 2;
+export var blockTextureMapping: [blockTextureCount]u16 = [1]u16{0} ** blockTextureCount;
+export var blockTextureBase: u16 = 4;
 export var mapInfo: MapInfo = .{};
 export var cameraInfo: CameraInfo = undefined;
 var gpa: std.heap.GeneralPurposeAllocator(.{
@@ -188,8 +191,6 @@ export fn loadSampleMap() bool {
         for (range(u16, length * chunkWidth)) |j| {
             for (range(u8, 8)) |k| {
                 testingMap.accessBlock(i, j, k).id = prng.random.uintAtMost(u16, 2);
-                // testingMap.accessBlock(i, j, k).id =
-                // testingMap.accessBlock(i, j, k).*.isAir = prng.random.float(f32) > (1 - @intToFloat(f32, k) / 8);
             }
         }
     }
@@ -201,12 +202,22 @@ fn generateGeomentryData(current: *TestingMap.ChunkType, exp: *ExportedPosition)
     for (range(u8, chunkWidth)) |i| {
         for (range(u8, chunkWidth)) |j| {
             for (range(u8, chunkHeight)) |k| {
-                if (current.access(i, j, k).solid()) {
+                const cur = current.access(i, j, k);
+                if (cur.solid()) {
                     for (rangeEnum(common.Direction)) |dir| {
                         if (current.accessNeighbor(i, j, k, dir)) |neighbor| {
                             if (neighbor.solid()) continue;
                         }
-                        exp.push(8, common.fillRect([_]u32{ i, j, k }, dir, [_]f32{ 0, 0, 1 }), [_]u32{ 0, 1, 2, 2, 1, 3 });
+                        const id = cur.id - 1;
+                        exp.push(
+                            8,
+                            common.fillRect(
+                                [_]u32{ i, j, k },
+                                dir,
+                                [_]u16{ @mod(id, blockTextureBase), @divTrunc(id, blockTextureBase), 2 },
+                            ),
+                            [_]u32{ 0, 1, 2, 2, 1, 3 },
+                        );
                     }
                 }
             }
