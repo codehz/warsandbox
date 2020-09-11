@@ -129,7 +129,7 @@ export async function main(
     input.detect([1], o => mgr.use2 = o);
     input.detect([2], o => mgr.use3 = o);
 
-    enterGameMode(renderer.domElement, (o) => paused = !o);
+    enterGameMode((o) => paused = !o);
 
     document.onmousemove = (e) => {
         if (paused) return;
@@ -137,13 +137,13 @@ export async function main(
     }
 }
 
-function enterGameMode(canvas: HTMLCanvasElement, f: (f: boolean) => void) {
+function enterGameMode(f: (f: boolean) => void) {
     document.onfullscreenchange = (e) => {
         if (!!document.fullscreenElement) {
-            canvas.requestPointerLock();
+            document.body.requestPointerLock();
         } else {
             f(false);
-            canvas.onclick = cb;
+            document.body.onclick = cb;
         }
     }
     document.onfullscreenerror = (e) => {
@@ -158,15 +158,15 @@ function enterGameMode(canvas: HTMLCanvasElement, f: (f: boolean) => void) {
             f(true);
         } else {
             f(false);
-            canvas.onclick = cb;
+            document.body.onclick = cb;
         }
     }
     const cb = () => {
-        canvas.onclick = null;
+        document.body.onclick = null;
         if (document.fullscreenElement)
-            canvas.requestPointerLock();
+            document.body.requestPointerLock();
         else
-            canvas.requestFullscreen({ navigationUI: "hide" });
+            document.body.requestFullscreen({ navigationUI: "hide" });
     }
-    canvas.onclick = cb;
+    document.body.onclick = cb;
 }
