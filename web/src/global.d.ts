@@ -1,5 +1,8 @@
 declare interface WasmExport {
     memory: WebAssembly.Memory;
+    blockTextureCount: number;
+    blockTextureMapping: number;
+    blockTextureBase: number;
     mapInfo: number;
     cameraInfo: number;
     map: number;

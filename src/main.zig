@@ -131,7 +131,7 @@ fn reportError(comptime str: []const u8, e: anytype) noreturn {
     unreachable;
 }
 
-export const blockTextureCount = 2;
+export const blockTextureCount: u16 = 2;
 export var blockTextureMapping: [blockTextureCount]u16 = [1]u16{0} ** blockTextureCount;
 export var blockTextureBase: u16 = 4;
 export var mapInfo: MapInfo = .{};
@@ -208,13 +208,17 @@ fn generateGeomentryData(current: *TestingMap.ChunkType, exp: *ExportedPosition)
                         if (current.accessNeighbor(i, j, k, dir)) |neighbor| {
                             if (neighbor.solid()) continue;
                         }
-                        const id = cur.id - 1;
+                        const texid = blockTextureMapping[cur.id - 1];
                         exp.push(
                             8,
                             common.fillRect(
                                 [_]u32{ i, j, k },
                                 dir,
-                                [_]u16{ @mod(id, blockTextureBase), @divTrunc(id, blockTextureBase), 2 },
+                                [_]u16{
+                                    @mod(texid, blockTextureBase),
+                                    @divTrunc(texid, blockTextureBase),
+                                    blockTextureBase,
+                                },
                             ),
                             [_]u32{ 0, 1, 2, 2, 1, 3 },
                         );

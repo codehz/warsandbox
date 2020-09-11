@@ -8,7 +8,8 @@ export async function main(
     camera: THREE.Camera,
     renderer: THREE.WebGLRenderer,
     adjust: () => void) {
-    const loader = new VoxelTextureManager(2, 16);
+    const textbase = 4;
+    const loader = new VoxelTextureManager(textbase, 16);
     await loader.add("assets/bedrock.png");
     await loader.add("assets/test.png");
     const testtex = new THREE.MeshStandardMaterial({
@@ -31,8 +32,12 @@ export async function main(
     console.timeLog("init", "init engine");
     mod.initPlayer();
     console.timeLog("init", "init player");
-
-    // mod.tick();
+    const blockTextureCount = utils.readUint16(mod.blockTextureCount);
+    const textmap = utils.getUint16BufferFromSlice(mod.blockTextureMapping, blockTextureCount * 2);
+    for (let i = 0; i < blockTextureCount; i++) {
+        textmap[i] = i;
+    }
+    utils.writeUint16(mod.blockTextureBase, textbase);
     console.timeEnd("init");
 
     const chunkBoundingBox = new THREE.Box3(

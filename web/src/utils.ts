@@ -41,8 +41,16 @@ export function readUint32(address: number) {
     const bytes = new Uint32Array(memory.buffer, address, 1);
     return bytes[0];
 }
+export function readUint16(address: number) {
+    const bytes = new Uint16Array(memory.buffer, address, 1);
+    return bytes[0];
+}
 export function writeUint32(address: number, data: number) {
     const bytes = new Uint32Array(memory.buffer, address, 1);
+    bytes[0] = data;
+}
+export function writeUint16(address: number, data: number) {
+    const bytes = new Uint16Array(memory.buffer, address, 1);
     bytes[0] = data;
 }
 export function writeFloat(address: number, data: number) {
@@ -57,6 +65,9 @@ export function getFloat32BufferFromSlice(addr: number, len: number) {
 }
 export function getUint32BufferFromSlice(addr: number, len: number) {
     return new Uint32Array(memory.buffer, addr, len / 4);
+}
+export function getUint16BufferFromSlice(addr: number, len: number) {
+    return new Uint16Array(memory.buffer, addr, len / 2);
 }
 export function getDataViewFromSlice(addr: number, len: number) {
     return new DataView(memory.buffer, addr, len);
