@@ -1,11 +1,11 @@
 const std = @import("std");
 const C = @import("./components.zig");
 const control = @import("./control.zig");
-const utils = @import("./utils.zig");
-const ecs = @import("./ecs.zig");
-usingnamespace @import("./utils.zig");
-usingnamespace @import("./updater.zig");
-usingnamespace @import("./math.zig");
+const utils = @import("../utils/utils.zig");
+const ecs = @import("../utils/ecs.zig");
+usingnamespace @import("../utils/utils.zig");
+usingnamespace @import("../utils/updater.zig");
+usingnamespace @import("../utils/math.zig");
 
 pub const Entity = usize;
 const Registry = ecs.Registry(C, Entity);

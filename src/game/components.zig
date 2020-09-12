@@ -1,5 +1,5 @@
 const std = @import("std");
-usingnamespace @import("./math.zig");
+usingnamespace @import("../utils/math.zig");
 
 pub const Position = struct { value: Vector3D };
 pub const Velocity = struct { value: Vector3D };

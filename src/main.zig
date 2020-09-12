@@ -1,14 +1,14 @@
 const std = @import("std");
-const block = @import("./block.zig");
-const chunk = @import("./chunk.zig");
-const map = @import("./map.zig");
-const common = @import("./common.zig");
-const control = @import("./control.zig");
-usingnamespace @import("./utils.zig");
-const C = @import("./components.zig");
-const console = @import("./console.zig");
-usingnamespace @import("./engine.zig");
-usingnamespace @import("./math.zig");
+const block = @import("./world/block.zig");
+const chunk = @import("./world/chunk.zig");
+const map = @import("./world/map.zig");
+const common = @import("./utils/common.zig");
+const control = @import("./game/control.zig");
+usingnamespace @import("./utils/utils.zig");
+const C = @import("./game/components.zig");
+const console = @import("./introp/console.zig");
+usingnamespace @import("./game/engine.zig");
+usingnamespace @import("./utils/math.zig");
 
 pub const log = console.zlog;
 pub const log_level = .debug;

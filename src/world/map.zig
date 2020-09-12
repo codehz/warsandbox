@@ -1,5 +1,5 @@
 const chunk = @import("./chunk.zig");
-usingnamespace @import("./math.zig");
+usingnamespace @import("../utils/math.zig");
 
 pub const ConnectedFace = [3][2]bool;
 

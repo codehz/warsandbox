@@ -1,6 +1,5 @@
 const std = @import("std");
 const builtin = std.builtin;
-const sparse_set = @import("./sparse_set.zig");
 const srb = @import("./srb.zig");
 
 fn getTypeCount(comptime components: anytype) comptime_int {

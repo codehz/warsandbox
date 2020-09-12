@@ -1,4 +1,4 @@
-const common = @import("./common.zig");
+const common = @import("../utils/common.zig");
 
 pub fn Chunk(comptime mBlockType: type, mWidth: u8, mHeight: u8) type {
     return struct {
