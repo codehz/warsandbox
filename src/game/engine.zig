@@ -143,10 +143,8 @@ pub fn Engine(comptime MapType: type) type {
                         } else if (control.info.use3) use3: {
                             // FIXME: check game mode
                             // FIXME: check and use selected block
-                            const item: *I.ItemStack = if (str.inv.selected) |invselected| sel: {
-                                if (str.inv.container.data.find(invselected)) |selitem| {
-                                    break :sel selitem.*;
-                                } else break :use3;
+                            const item: *I.ItemStack = if (str.inv.container.data.find(str.inv.selected)) |selitem| sel: {
+                                break :sel selitem;
                             } else break :use3;
                             _ = item.useOnBlock(self.map, selected.pos, selected.direction);
                             str.control.selected = null;

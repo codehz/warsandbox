@@ -21,7 +21,7 @@ pub const ControlByPlayer = struct {
 };
 pub const Inventory = struct {
     container: I.Container,
-    selected: ?u16 = null,
+    selected: u16 = 0,
 
     pub fn deinit(self: *@This()) void {
         self.container.deinit();

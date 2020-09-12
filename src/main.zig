@@ -6,6 +6,7 @@ const common = @import("./utils/common.zig");
 const control = @import("./game/control.zig");
 usingnamespace @import("./utils/utils.zig");
 const C = @import("./game/components.zig");
+const I = @import("./game/item.zig");
 const console = @import("./introp/console.zig");
 usingnamespace @import("./game/engine.zig");
 usingnamespace @import("./utils/math.zig");
@@ -169,6 +170,9 @@ export fn initPlayer() void {
     player = engine.initPlayer(.{
         .pos = .{ .value = .{ 0.5, 0.5, 8 } },
     }) catch unreachable;
+    const inv = engine.registry.get(player, C.Inventory).?;
+    inv.container.data.insert(0, I.ItemStack.init(&gpa.allocator, I.Item.createForBlock(&gpa.allocator, 1) catch report("Failed to create item"), 64)) catch report("Failed to add item");
+    inv.container.data.insert(1, I.ItemStack.init(&gpa.allocator, I.Item.createForBlock(&gpa.allocator, 2) catch report("Failed to create item"), 64)) catch report("Failed to add item");
 
     engine.updater.addFn(CameraInfo.updateCamera, &cameraInfo) catch report("Failed to register camera updater");
 }

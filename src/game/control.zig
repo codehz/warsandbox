@@ -7,6 +7,7 @@ const ControlInfo = extern struct {
     use1: bool = false, // state
     use2: bool = false, // state
     use3: bool = false, // state
+    selectedSlot: u8 = 0, // absolute
 };
 
 pub var info = ControlInfo{};

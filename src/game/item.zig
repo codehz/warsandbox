@@ -12,12 +12,12 @@ pub const Item = union(enum) {
 
     pub fn maxStackSize(self: *const @This()) u8 {
         return switch (self) {
-            .BlockItem => 16,
+            .BlockItem => 64,
         };
     }
 
-    pub fn createForBlock(allocator: *std.mem.Allocator, id: u16) *@This() {
-        var ret = allocator.create(@This());
+    pub fn createForBlock(allocator: *std.mem.Allocator, id: u16) !*@This() {
+        var ret = try allocator.create(@This());
         ret.* = @This(){ .BlockItem = id };
         return ret;
     }
@@ -47,17 +47,17 @@ pub const Item = union(enum) {
 pub const ItemStack = struct {
     allocator: *std.mem.Allocator,
     item: *Item,
-    count: u8,
+    count: u16,
 
-    pub fn init(allocator: *std.mem.Allocator, item: *Item, count: u8) @This() {
+    pub fn init(allocator: *std.mem.Allocator, item: *Item, count: u16) @This() {
         return .{
             .allocator = allocator,
-            .items = item,
+            .item = item,
             .count = count,
         };
     }
 
-    pub fn add(self: *@This(), addcount: u8) bool {
+    pub fn add(self: *@This(), addcount: u16) bool {
         const newcount = self.count +% addcount;
         if (newcount < self.count) return false; // overflow
         if (newcount > self.items.maxStackSize()) return false;
@@ -65,7 +65,7 @@ pub const ItemStack = struct {
         return true;
     }
 
-    pub fn del(self: *@This(), delcount: u8) bool {
+    pub fn del(self: *@This(), delcount: u16) bool {
         if (self.count < delcount) return false;
         self.count -= delcount;
         return true;
@@ -86,7 +86,7 @@ pub const ItemStack = struct {
 };
 
 pub const Container = struct {
-    pub const Storage = srb.AutoTreeMap(u16, *ItemStack);
+    pub const Storage = srb.AutoTreeMap(u16, ItemStack);
     size: u16,
     data: Storage,
 
