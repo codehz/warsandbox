@@ -27,7 +27,7 @@ export class VoxelTextureManager {
     this.ctx.drawImage(
       image,
       (id % this.base) * this.size,
-      this.base * this.size - ((id / this.base) | 0) * this.size - this.size,
+      ((id / this.base) | 0) * this.size,
       this.size,
       this.size,
     );

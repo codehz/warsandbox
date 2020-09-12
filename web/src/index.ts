@@ -1,9 +1,7 @@
 import * as THREE from "three";
 import { main } from "./main";
 
-const renderer = new THREE.WebGLRenderer({
-    antialias: true,
-});
+const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;

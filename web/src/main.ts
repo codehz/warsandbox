@@ -12,12 +12,13 @@ export async function main(
     const loader = new VoxelTextureManager(textbase, 16);
     await loader.add("assets/bedrock.png");
     await loader.add("assets/test.png");
-    const testtex = new THREE.MeshStandardMaterial({
+    const testtex = new THREE.MeshPhongMaterial({
         map: loader.getTexture(),
         side: THREE.FrontSide,
     });
     testtex.map.minFilter = THREE.NearestFilter;
     testtex.map.magFilter = THREE.NearestFilter;
+    testtex.map.flipY = false;
 
     console.time("init");
 
