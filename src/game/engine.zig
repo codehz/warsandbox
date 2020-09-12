@@ -1,5 +1,6 @@
 const std = @import("std");
 const C = @import("./components.zig");
+const I = @import("./item.zig");
 const control = @import("./control.zig");
 const utils = @import("../utils/utils.zig");
 const ecs = @import("../utils/ecs.zig");
@@ -50,6 +51,9 @@ pub fn Engine(comptime MapType: type) type {
             try self.registry.add(player, data.health);
             try self.registry.add(player, data.energy);
             try self.registry.add(player, data.label);
+            try self.registry.add(player, C.Inventory{
+                .container = I.Container.init(self.allocator, 8),
+            });
             return player;
         }
 

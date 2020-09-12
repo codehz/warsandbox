@@ -542,6 +542,9 @@ pub fn TreeMapUnmanaged(comptime K: type, comptime V: type, comptime compareFn: 
 
         pub fn remove(self: *@This(), allocator: *std.mem.Allocator, key: K) bool {
             const ret = self.raw.remove(key) orelse return false;
+            if (@hasDecl(V, "deinit")) {
+                ret.value.deinit();
+            }
             allocator.destroy(ret);
             return true;
         }

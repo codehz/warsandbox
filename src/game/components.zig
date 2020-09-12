@@ -1,4 +1,5 @@
 const std = @import("std");
+const I = @import("./item.zig");
 usingnamespace @import("../utils/math.zig");
 
 pub const Position = struct { value: Vector3D };
@@ -17,6 +18,13 @@ pub const ControlByPlayer = struct {
         direction: Dir3D,
     };
     selected: ?Selected = null,
+};
+pub const Inventory = struct {
+    container: I.Container,
+
+    pub fn deinit(self: *@This()) void {
+        self.container.deinit();
+    }
 };
 
 pub const Label = struct {
