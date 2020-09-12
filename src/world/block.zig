@@ -30,8 +30,8 @@ pub const SimpleBlock = struct {
         self.id = 0;
     }
 
-    pub fn setBlock(self: *@This()) void {
-        self.id = 1;
+    pub fn setBlock(self: *@This(), id: u16) void {
+        self.id = id;
     }
 
     pub fn init() @This() {

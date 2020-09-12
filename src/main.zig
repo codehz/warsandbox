@@ -54,6 +54,10 @@ const ExportedPosition = extern struct {
 const CameraInfo = extern struct {
     data: [8]f32,
     selectedFace: DirEnum,
+    inventory: [8]extern struct {
+        iconid: u16,
+        count: u16,
+    },
 
     fn adjustCamera(self: *@This(), offset: f32) void {
         var camIter = engine.registry.view(struct {

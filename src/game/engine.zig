@@ -82,7 +82,7 @@ pub fn Engine(comptime MapType: type) type {
                 const maxboostshiftspeed = 0.15;
                 const changerate = 0.2;
                 const boostchangerate = 0.1;
-                var iter = self.registry.view(struct { control: *C.ControlByPlayer, pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
+                var iter = self.registry.view(struct { control: *C.ControlByPlayer, inv: *C.Inventory, pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
                 if (iter.next()) |str| {
                     str.faced.yaw += control.info.rotate[0];
                     if (str.faced.yaw < 0) {
@@ -140,15 +140,15 @@ pub fn Engine(comptime MapType: type) type {
                             proxy.chunk.dirty = true;
                             str.control.selected = null;
                             control.info.use1 = false;
-                        } else if (control.info.use3) {
+                        } else if (control.info.use3) use3: {
                             // FIXME: check game mode
                             // FIXME: check and use selected block
-                            const x = @intCast(u16, @intCast(i32, selected.pos[0]) + @intCast(i32, selected.direction[0]));
-                            const y = @intCast(u16, @intCast(i32, selected.pos[1]) + @intCast(i32, selected.direction[1]));
-                            const z = @intCast(u8, @intCast(i16, selected.pos[2]) + @intCast(i16, selected.direction[2]));
-                            const proxy = self.map.accessChunk(x, y);
-                            proxy.chunk.access(proxy.mx, proxy.my, z).setBlock();
-                            proxy.chunk.dirty = true;
+                            const item: *I.ItemStack = if (str.inv.selected) |invselected| sel: {
+                                if (str.inv.container.data.find(invselected)) |selitem| {
+                                    break :sel selitem.*;
+                                } else break :use3;
+                            } else break :use3;
+                            _ = item.useOnBlock(self.map, selected.pos, selected.direction);
                             str.control.selected = null;
                             control.info.use3 = false;
                         }

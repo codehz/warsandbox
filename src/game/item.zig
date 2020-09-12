@@ -1,5 +1,10 @@
 const std = @import("std");
 const srb = @import("../utils/srb.zig");
+usingnamespace @import("../utils/math.zig");
+
+pub const UseResult = union(enum) {
+    Consumed
+};
 
 pub const Item = union(enum) {
     BlockItem: u16,
@@ -20,6 +25,22 @@ pub const Item = union(enum) {
     pub fn destroy(self: *@This(), allocator: *std.mem.Allocator) void {
         allocator.destroy(self);
         // PLACEHOLDER
+    }
+
+    pub fn useOnBlock(self: *@This(), map: anytype, pos: BlockPos, direction: Dir3D) UseResult {
+        // TODO: process another type of items
+        switch (self.*) {
+            .BlockItem => |blockId| {
+                const x = @intCast(u16, @intCast(i32, pos[0]) + @intCast(i32, direction[0]));
+                const y = @intCast(u16, @intCast(i32, pos[1]) + @intCast(i32, direction[1]));
+                const z = @intCast(u8, @intCast(i16, pos[2]) + @intCast(i16, direction[2]));
+
+                const proxy = map.accessChunk(x, y);
+                proxy.chunk.access(proxy.mx, proxy.my, z).setBlock(blockId);
+                proxy.chunk.dirty = true;
+                return UseResult.Consumed;
+            },
+        }
     }
 };
 
@@ -48,6 +69,15 @@ pub const ItemStack = struct {
         if (self.count < delcount) return false;
         self.count -= delcount;
         return true;
+    }
+
+    pub fn useOnBlock(self: *@This(), map: anytype, pos: BlockPos, direction: Dir3D) bool {
+        if (self.count == 0) return false;
+        switch (self.item.useOnBlock(map, pos, direction)) {
+            .Consumed => {
+                return self.del(1);
+            }
+        }
     }
 
     pub fn deinit(self: *@This()) void {
