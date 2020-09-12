@@ -128,6 +128,8 @@ pub fn Engine(comptime MapType: type) type {
                             break;
                         }
                     }
+                    str.inv.selected = @mod(@intCast(u16, control.info.selectedSlot), str.inv.container.size);
+                    control.info.selectedSlot = @intCast(u8, str.inv.selected);
                     if (str.control.selected) |selected| {
                         if (control.info.use1) {
                             // FIXME: add break time

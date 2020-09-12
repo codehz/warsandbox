@@ -131,12 +131,13 @@ class ControlMapper {
     static USE1 = 19;
     static USE2 = 20;
     static USE3 = 21;
+    static SELECTED_SLOT = 22;
 
     constructor(addr: number) {
         this.addr = addr;
     }
 
-    get view() { return getDataViewFromSlice(this.addr, 22); }
+    get view() { return getDataViewFromSlice(this.addr, 23); }
 
     set move([x, y]: [number, number]) {
         const view = this.view;
@@ -156,6 +157,7 @@ class ControlMapper {
     set use1(val: boolean) { this.view.setUint8(ControlMapper.USE1, val ? 1 : 0); }
     set use2(val: boolean) { this.view.setUint8(ControlMapper.USE2, val ? 1 : 0); }
     set use3(val: boolean) { this.view.setUint8(ControlMapper.USE3, val ? 1 : 0); }
+    set selectedSlot(val: number) { this.view.setUint8(ControlMapper.SELECTED_SLOT, val); }
 }
 export function getControlMapper(addr: number) {
     return new ControlMapper(addr);

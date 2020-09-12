@@ -132,6 +132,14 @@ export async function main(
     input.detect([0], o => mgr.use1 = o);
     input.detect([1], o => mgr.use2 = o);
     input.detect([2], o => mgr.use3 = o);
+    input.detect([49], o => mgr.selectedSlot = 0);
+    input.detect([50], o => mgr.selectedSlot = 1);
+    input.detect([51], o => mgr.selectedSlot = 2);
+    input.detect([52], o => mgr.selectedSlot = 3);
+    input.detect([53], o => mgr.selectedSlot = 4);
+    input.detect([54], o => mgr.selectedSlot = 5);
+    input.detect([55], o => mgr.selectedSlot = 6);
+    input.detect([56], o => mgr.selectedSlot = 7);
 
     enterGameMode((o) => paused = !o);
 
