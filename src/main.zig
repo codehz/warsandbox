@@ -141,7 +141,7 @@ export var blockTextureMapping: [blockTextureCount]u16 = [1]u16{0} ** blockTextu
 export var blockTextureBase: u16 = 4;
 export var mapInfo: MapInfo = .{};
 export var cameraInfo: CameraInfo = undefined;
-export var particle: @import("./introp/particle.zig") = undefined;
+export var particle: @import("./introp/particle.zig").ParticleManager = undefined;
 var gpa: std.heap.GeneralPurposeAllocator(.{
     .thread_safe = false,
     .safety = false,
@@ -186,8 +186,8 @@ export fn initPlayer() void {
     )) catch report("Failed to add item");
     inv.container.data.insert(2, I.ItemStack.init(
         &gpa.allocator,
-        I.Item.createSimpleWeapon(&gpa.allocator, 0xFF0000, 0.1, 0.8) catch report("Failed to create item"),
-        64,
+        I.Item.createSimpleWeapon(&gpa.allocator, 0xFFFF00, 0.5, 0.5) catch report("Failed to create item"),
+        32767,
     )) catch report("Failed to add item");
 
     engine.updater.addFn(CameraInfo.updateCamera, &cameraInfo) catch report("Failed to register camera updater");

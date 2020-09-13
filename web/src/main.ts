@@ -94,7 +94,7 @@ export async function main(
     scene.add(highlight);
 
     const particleInfo = utils.readParticleInfo(mod.particle);
-    const particles = createParticleSystem(particleInfo.proxy(new THREE.InterleavedBuffer(particleInfo.data, 7)));
+    const particles = createParticleSystem(particleInfo);
     scene.add(particles);
 
     let paused = true;

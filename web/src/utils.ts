@@ -222,7 +222,7 @@ export function readMapInfo(addr: number): MapInfo {
 }
 
 export function readParticleInfo(addr: number): ProxiedArray<Float32Array> {
-    return new ProxiedArray(addr + 4, addr, 0, 256, getFloat32BufferFromSlice);
+    return new ProxiedArray(addr + 4, addr, 0, 256 * 7, getFloat32BufferFromSlice);
 }
 
 export class ProxiedArray<T extends ArrayLike<number>> {
