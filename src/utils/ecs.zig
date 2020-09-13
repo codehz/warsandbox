@@ -98,6 +98,12 @@ pub fn Registry(comptime components: anytype, comptime Entity: type) type {
             _ = @field(self.storage, ctn).remove(self.allocator, e);
         }
 
+        pub fn destroy(self: *@This(), e: Entity) void {
+            inline for (types) |t| {
+                self.remove(e, t);
+            }
+        }
+
         pub fn get(self: *@This(), e: Entity, comptime ct: type) ?*ct {
             const ctn = @typeName(ct);
             return @field(self.storage, ctn).find(e);
