@@ -6,6 +6,7 @@ pub const Position = struct { value: Vector3D };
 pub const Velocity = struct { value: Vector3D };
 pub const Faced = struct { yaw: f32, pitch: f32 };
 pub const Renderable = struct {};
+pub const Gravity = struct { delta: f32 };
 pub const BoundingBox = struct { radius: f32, height: f32 };
 pub const Health = struct { max: f32, value: f32 };
 pub const Energy = struct { max: f32, value: f32 };

@@ -18,6 +18,7 @@ pub const PlayerInitData = struct {
     energy: C.Energy = .{ .max = 100, .value = 100 },
     label: C.Label = C.Label.init("player"),
     box: C.BoundingBox = .{ .radius = 0.32, .height = 1.9 },
+    gravity: C.Gravity = .{ .delta = 0.02 },
 };
 
 pub fn Engine(comptime MapType: type) type {
@@ -51,6 +52,7 @@ pub fn Engine(comptime MapType: type) type {
             try self.registry.add(player, data.health);
             try self.registry.add(player, data.energy);
             try self.registry.add(player, data.label);
+            try self.registry.add(player, data.gravity);
             try self.registry.add(player, C.Inventory{
                 .container = I.Container.init(self.allocator, 8),
             });
@@ -176,11 +178,13 @@ pub fn Engine(comptime MapType: type) type {
             while (true) {
                 suspend;
                 if (flag.*) break;
-                var iter = self.registry.view(struct { pos: *C.Position, vel: *C.Velocity });
+                var iter = self.registry.view(struct { pos: *C.Position, vel: *C.Velocity, gravity: ?*C.Gravity});
 
                 while (iter.next()) |str| {
                     const e = iter.entity;
-                    str.vel.value[2] -= 0.02;
+                    if (str.gravity) |gravity| {
+                        str.vel.value[2] -= gravity.delta;
+                    }
                     str.pos.* = C.Position{ .value = add3d(str.pos.value, str.vel.value) };
                 }
             }
