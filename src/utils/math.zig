@@ -327,6 +327,11 @@ pub fn distance3d(v: Vector3D) f32 {
     return std.math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
 
+pub fn setDistance3d(v: Vector3D, a: f32) Vector3D {
+    const param = a / distance3d(v);
+    return .{ v[0] * a, v[1] * a, v[2] * a };
+}
+
 pub fn morph3d(a: Vector3D, b: Vector3D, t: f32) Vector3D {
     return .{
         (b[0] - a[0]) * t + a[0],

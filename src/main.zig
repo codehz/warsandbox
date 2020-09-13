@@ -171,8 +171,21 @@ export fn initPlayer() void {
         .pos = .{ .value = .{ 0.5, 0.5, 8 } },
     }) catch unreachable;
     const inv = engine.registry.get(player, C.Inventory).?;
-    inv.container.data.insert(0, I.ItemStack.init(&gpa.allocator, I.Item.createForBlock(&gpa.allocator, 1) catch report("Failed to create item"), 64)) catch report("Failed to add item");
-    inv.container.data.insert(1, I.ItemStack.init(&gpa.allocator, I.Item.createForBlock(&gpa.allocator, 2) catch report("Failed to create item"), 64)) catch report("Failed to add item");
+    inv.container.data.insert(0, I.ItemStack.init(
+        &gpa.allocator,
+        I.Item.createForBlock(&gpa.allocator, 1) catch report("Failed to create item"),
+        64,
+    )) catch report("Failed to add item");
+    inv.container.data.insert(1, I.ItemStack.init(
+        &gpa.allocator,
+        I.Item.createForBlock(&gpa.allocator, 2) catch report("Failed to create item"),
+        64,
+    )) catch report("Failed to add item");
+    inv.container.data.insert(2, I.ItemStack.init(
+        &gpa.allocator,
+        I.Item.createSimpleWeapon(&gpa.allocator, 0xFF0000, 0.1, 0.8) catch report("Failed to create item"),
+        64,
+    )) catch report("Failed to add item");
 
     engine.updater.addFn(CameraInfo.updateCamera, &cameraInfo) catch report("Failed to register camera updater");
 }

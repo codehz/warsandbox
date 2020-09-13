@@ -1,18 +1,27 @@
 const std = @import("std");
 const srb = @import("../utils/srb.zig");
+const engine = @import("./engine.zig");
+const C = @import("./components.zig");
 usingnamespace @import("../utils/math.zig");
 
 pub const UseResult = union(enum) {
-    Consumed
+    None,
+    Consumed,
 };
 
 pub const Item = union(enum) {
     BlockItem: u16,
+    SimpleWeapon: struct {
+        bulletColor: u32,
+        bulletSize: f32,
+        velocity: f32,
+    },
     // TODO: add more types
 
-    pub fn maxStackSize(self: *const @This()) u8 {
+    pub fn maxStackSize(self: *const @This()) u16 {
         return switch (self) {
             .BlockItem => 64,
+            .SimpleWeapon => 256,
         };
     }
 
@@ -22,12 +31,36 @@ pub const Item = union(enum) {
         return ret;
     }
 
+    pub fn createSimpleWeapon(allocator: *std.mem.Allocator, color: u32, size: f32, velocity: f32) !*@This() {
+        var ret = try allocator.create(@This());
+        ret.* = @This(){ .SimpleWeapon = .{
+            .bulletColor = color,
+            .bulletSize = size,
+            .velocity = velocity,
+        } };
+        return ret;
+    }
+
     pub fn destroy(self: *@This(), allocator: *std.mem.Allocator) void {
         allocator.destroy(self);
         // PLACEHOLDER
     }
 
-    pub fn useOnBlock(self: *@This(), map: anytype, pos: BlockPos, direction: Dir3D) UseResult {
+    pub fn use(self: *@This(), registry: *engine.Registry, pos: Vector3D, dir: Vector3D) !UseResult {
+        switch (self.*) {
+            .BlockItem => return UseResult.None,
+            .SimpleWeapon => |weapon| {
+                const bullet = registry.create();
+                try registry.add(bullet, C.SimpleBullet{});
+                try registry.add(bullet, C.Position{ .value = add3d(pos, Vector3D{ 0, 0, weapon.bulletSize / 2 }) });
+                try registry.add(bullet, C.Velocity{ .value = setDistance3d(dir, weapon.velocity) });
+                try registry.add(bullet, C.BoundingBox{ .radius = weapon.bulletSize, .height = weapon.bulletSize });
+                return UseResult.Consumed;
+            },
+        }
+    }
+
+    pub fn useOnBlock(self: *@This(), map: anytype, pos: BlockPos, direction: Dir3D) !UseResult {
         // TODO: process another type of items
         switch (self.*) {
             .BlockItem => |blockId| {
@@ -40,6 +73,7 @@ pub const Item = union(enum) {
                 proxy.chunk.dirty = true;
                 return UseResult.Consumed;
             },
+            else => return UseResult.None,
         }
     }
 };
@@ -71,13 +105,28 @@ pub const ItemStack = struct {
         return true;
     }
 
-    pub fn useOnBlock(self: *@This(), map: anytype, pos: BlockPos, direction: Dir3D) bool {
-        if (self.count == 0) return false;
-        switch (self.item.useOnBlock(map, pos, direction)) {
+    pub fn use(self: *@This(), registry: *engine.Registry, pos: Vector3D, dir: Vector3D) !?UseResult {
+        if (self.count == 0) return null;
+        const ret = try self.item.use(registry, pos, dir);
+        switch (ret) {
             .Consumed => {
-                return self.del(1);
-            }
+                _ = self.del(1);
+            },
+            else => {},
         }
+        return ret;
+    }
+
+    pub fn useOnBlock(self: *@This(), map: anytype, pos: BlockPos, direction: Dir3D) !?UseResult {
+        if (self.count == 0) return null;
+        const ret = try self.item.useOnBlock(map, pos, direction);
+        switch (ret) {
+            .Consumed => {
+                _ = self.del(1);
+            },
+            else => {},
+        }
+        return ret;
     }
 
     pub fn deinit(self: *@This()) void {

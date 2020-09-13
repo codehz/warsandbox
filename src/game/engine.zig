@@ -9,7 +9,7 @@ usingnamespace @import("../utils/updater.zig");
 usingnamespace @import("../utils/math.zig");
 
 pub const Entity = usize;
-const Registry = ecs.Registry(C, Entity);
+pub const Registry = ecs.Registry(C, Entity);
 
 pub const PlayerInitData = struct {
     pos: C.Position,
@@ -82,7 +82,13 @@ pub fn Engine(comptime MapType: type) type {
                 const maxboostshiftspeed = 0.15;
                 const changerate = 0.2;
                 const boostchangerate = 0.1;
-                var iter = self.registry.view(struct { control: *C.ControlByPlayer, inv: *C.Inventory, pos: *C.Position, vel: *C.Velocity, faced: *C.Faced });
+                var iter = self.registry.view(struct {
+                    control: *C.ControlByPlayer,
+                    inv: *C.Inventory,
+                    pos: *C.Position,
+                    vel: *C.Velocity,
+                    faced: *C.Faced,
+                });
                 if (iter.next()) |str| {
                     str.faced.yaw += control.info.rotate[0];
                     if (str.faced.yaw < 0) {
@@ -142,14 +148,23 @@ pub fn Engine(comptime MapType: type) type {
                             proxy.chunk.dirty = true;
                             str.control.selected = null;
                             control.info.use1 = false;
-                        } else if (control.info.use3) use3: {
+                        } else if (control.info.use3) useOnBlock: {
                             // FIXME: check game mode
                             // FIXME: check and use selected block
                             const item: *I.ItemStack = if (str.inv.container.data.find(str.inv.selected)) |selitem| sel: {
                                 break :sel selitem;
-                            } else break :use3;
-                            _ = item.useOnBlock(self.map, selected.pos, selected.direction);
-                            str.control.selected = null;
+                            } else break :useOnBlock;
+                            if (item.useOnBlock(self.map, selected.pos, selected.direction) catch unreachable != null) {
+                                str.control.selected = null;
+                                control.info.use3 = false;
+                            }
+                        }
+                    }
+                    if (control.info.use3) use: {
+                        const item: *I.ItemStack = if (str.inv.container.data.find(str.inv.selected)) |selitem| sel: {
+                            break :sel selitem;
+                        } else break :use;
+                        if (item.use(&self.registry, ray.origin, ray.direction) catch unreachable != null) {
                             control.info.use3 = false;
                         }
                     }
