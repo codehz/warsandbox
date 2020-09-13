@@ -221,6 +221,10 @@ export function readMapInfo(addr: number): MapInfo {
     });
 }
 
+export function readParticleInfo(addr: number): ProxiedArray<Float32Array> {
+    return new ProxiedArray(addr + 4, addr, 0, 256, getFloat32BufferFromSlice);
+}
+
 export class ProxiedArray<T extends ArrayLike<number>> {
     private addr: number;
     private versionAddr: number;
@@ -241,7 +245,7 @@ export class ProxiedArray<T extends ArrayLike<number>> {
     }
 
     get count() {
-        return readUint32(this.countAddr);
+        return this.countAddr == 0 ? this.maxCount : readUint32(this.countAddr);
     }
 
     get data() {

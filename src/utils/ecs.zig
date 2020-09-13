@@ -115,13 +115,23 @@ pub fn Registry(comptime components: anytype, comptime Entity: type) type {
         }
 
         fn ViewIterator(comptime field: builtin.TypeInfo.StructField) type {
-            const ct = @typeInfo(field.field_type).Pointer.child;
+            comptime var isOptional = false;
+            const ct = switch (@typeInfo(field.field_type)) {
+                .Pointer => |ptr| ptr.child,
+                .Optional => |opt| blk: {
+                    isOptional = true;
+                    break :blk @typeInfo(opt.child).Pointer.child;
+                },
+                else => @compileError("Unknown type"),
+            };
             const ctn = @typeName(ct);
             const ft = srb.FieldType(Storage, @typeName(ct));
             return struct {
                 iter: ft.Iterator,
                 source: *ft,
                 last: ?*ft.KV = null,
+
+                const optional = isOptional;
 
                 fn jump(self: *@This(), key: Entity) bool {
                     if (self.source.lookup(key)) |kv| {
@@ -159,7 +169,11 @@ pub fn Registry(comptime components: anytype, comptime Entity: type) type {
             }
             var iterators: [itemFields.len]builtin.TypeInfo.StructField = undefined;
             inline for (itemFields) |field, i| {
-                const ct = @typeInfo(field.field_type).Pointer.child;
+                const ct = switch (@typeInfo(field.field_type)) {
+                    .Pointer => |ptr| ptr.child,
+                    .Optional => |opt| @typeInfo(opt.child).Pointer.child,
+                    else => @compileError("Unknown type"),
+                };
                 const ctn = @typeName(ct);
                 iterators[i] = .{
                     .name = ctn,
@@ -194,20 +208,32 @@ pub fn Registry(comptime components: anytype, comptime Entity: type) type {
                         var ent: ?Entity = null;
                         inline for (iterators) |def, i| {
                             var iter = &@field(self.iters, def.name);
-                            const current = iter.peek() orelse return null;
-                            if (ent) |e| {
-                                const re = std.math.order(current, e);
-                                if (re == .lt) {
-                                    if (!iter.jump(e)) {
+                            if (iterators[i].field_type.optional) {
+                                const e = ent.?;
+                                var skip = false;
+                                if (iter.peek()) |current| {
+                                    if (iter.jump(e)) {
+                                        @field(ret, itemFields[i].name) = iter.fetch();
+                                    } else {
+                                        @field(ret, itemFields[i].name) = null;
+                                    }
+                                }
+                            } else {
+                                const current = iter.peek() orelse return null;
+                                if (ent) |e| {
+                                    const re = std.math.order(current, e);
+                                    if (re == .lt) {
+                                        if (!iter.jump(e)) {
+                                            continue :out;
+                                        }
+                                    } else if (re == .gt) {
                                         continue :out;
                                     }
-                                } else if (re == .gt) {
-                                    continue :out;
+                                    @field(ret, itemFields[i].name) = iter.fetch();
+                                } else {
+                                    ent = current;
+                                    @field(ret, itemFields[i].name) = iter.fetch();
                                 }
-                                @field(ret, itemFields[i].name) = iter.fetch();
-                            } else {
-                                ent = current;
-                                @field(ret, itemFields[i].name) = iter.fetch();
                             }
                         }
                         self.entity = ent.?;
@@ -272,4 +298,10 @@ test "Basic test" {
     t.expect(vi2.next() != null);
     t.expect(vi2.next() != null);
     t.expect(vi2.next() == null);
+
+    var vi3 = reg.view(struct { a: *components.A, b: ?*components.B });
+    t.expect(vi3.next() != null);
+    t.expect(vi3.next() != null);
+    t.expect(vi3.next() != null);
+    t.expect(vi3.next() == null);
 }

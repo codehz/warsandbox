@@ -12,7 +12,11 @@ pub const Energy = struct { max: f32, value: f32 };
 pub const Targetable = struct {};
 pub const Hostility = struct {};
 pub const Died = struct {};
-pub const SimpleBullet = struct {};
+pub const SimpleBullet = struct {
+    particleId: ?u32 = null,
+    color: u32,
+    size: f32,
+};
 pub const ControlByPlayer = struct {
     pub const Selected = struct {
         pos: BlockPos,

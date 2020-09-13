@@ -51,7 +51,10 @@ pub const Item = union(enum) {
             .BlockItem => return UseResult.None,
             .SimpleWeapon => |weapon| {
                 const bullet = registry.create();
-                try registry.add(bullet, C.SimpleBullet{});
+                try registry.add(bullet, C.SimpleBullet{
+                    .color = weapon.bulletColor,
+                    .size = weapon.bulletSize,
+                });
                 try registry.add(bullet, C.Position{ .value = add3d(pos, Vector3D{ 0, 0, weapon.bulletSize / 2 }) });
                 try registry.add(bullet, C.Velocity{ .value = setDistance3d(dir, weapon.velocity) });
                 try registry.add(bullet, C.BoundingBox{ .radius = weapon.bulletSize, .height = weapon.bulletSize });

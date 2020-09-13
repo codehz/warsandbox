@@ -2,6 +2,7 @@ import * as THREE from "three";
 import * as utils from "./utils";
 import * as input from "./inputmanager";
 import { VoxelTextureManager } from "./texture";
+import { createParticleSystem } from "./particle";
 
 export async function main(
     scene: THREE.Scene,
@@ -91,6 +92,10 @@ export async function main(
         }));
     highlight.renderOrder = 998;
     scene.add(highlight);
+
+    const particleInfo = utils.readParticleInfo(mod.particle);
+    const particles = createParticleSystem(particleInfo.proxy(new THREE.InterleavedBuffer(particleInfo.data, 7)));
+    scene.add(particles);
 
     let paused = true;
 

@@ -141,6 +141,7 @@ export var blockTextureMapping: [blockTextureCount]u16 = [1]u16{0} ** blockTextu
 export var blockTextureBase: u16 = 4;
 export var mapInfo: MapInfo = .{};
 export var cameraInfo: CameraInfo = undefined;
+export var particle: @import("./introp/particle.zig") = undefined;
 var gpa: std.heap.GeneralPurposeAllocator(.{
     .thread_safe = false,
     .safety = false,
@@ -148,18 +149,20 @@ var gpa: std.heap.GeneralPurposeAllocator(.{
 var exportedMap: [width * length]ExportedPosition = undefined;
 var testingMap: TestingMap = undefined;
 var player: Entity = undefined;
-var engine: Engine(TestingMap) = undefined;
+pub var engine: Engine(TestingMap) = undefined;
 
 comptime {
     @export(exportedMap, .{ .name = "map" });
 }
 
 export fn initEngine() void {
+    particle.init();
     engine = Engine(TestingMap).init(&gpa.allocator, &testingMap);
     engine.initSystem() catch |e| {
         engine.deinit();
         reportError("Failed to init engine", e);
     };
+    engine.updater.addFn(@TypeOf(particle).updateFunction, &particle) catch report("Failed to register particle updater");
 }
 
 export fn deinitEngine() void {

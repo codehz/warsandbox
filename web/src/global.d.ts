@@ -7,6 +7,7 @@ declare interface WasmExport {
     cameraInfo: number;
     map: number;
     control: number;
+    particle: number;
     initEngine(): void;
     deinitEngine(): void;
     initPlayer(): void;
