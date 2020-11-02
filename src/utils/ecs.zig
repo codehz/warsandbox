@@ -46,6 +46,7 @@ pub fn Registry(comptime components: anytype, comptime Entity: type) type {
             .field_type = srb.AutoTreeMapUnmanaged(Entity, t),
             .default_value = null,
             .is_comptime = false,
+            .alignment = @alignOf(srb.AutoTreeMapUnmanaged(Entity, t))
         };
     }
     const Storage = @Type(.{
@@ -180,6 +181,7 @@ pub fn Registry(comptime components: anytype, comptime Entity: type) type {
                     .field_type = ViewIterator(field),
                     .default_value = null,
                     .is_comptime = false,
+                    .alignment = @alignOf(ViewIterator(field))
                 };
             }
             const Iterators = @Type(.{
