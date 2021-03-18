@@ -15,7 +15,6 @@ jobs:
           version: 0.8.0-dev.1503+dfeca48e3
       - name: Build
         run: |
-          export PATH=./zig:$PATH
           zig build -Drelease=true
           FILE=web/native/engine.wasm
           test -f "$FILE" || exit 1
