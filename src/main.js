@@ -1,4 +1,4 @@
-import * as THREE from "../web_modules/three.js";
+import * as THREE from "../_snowpack/pkg/three.js";
 import * as utils from "./utils.js";
 import * as input from "./inputmanager.js";
 import {VoxelTextureManager} from "./texture.js";
@@ -61,13 +61,23 @@ export async function main(scene, camera, renderer, adjust) {
     }
   }
   console.timeEnd("geo");
-  const highlight = new THREE.Mesh(new THREE.BoxGeometry(1.001, 1.001, 1.001), new THREE.MeshBasicMaterial({
-    color: 16777215,
-    opacity: 0.5,
-    transparent: true,
-    depthWrite: false,
-    vertexColors: true
-  }));
+  const highlight = new THREE.Mesh(new THREE.BoxGeometry(1.001, 1.001, 1.001), [
+    new THREE.MeshBasicMaterial({
+      color: 65280,
+      opacity: 0.2,
+      transparent: true,
+      depthWrite: false,
+      vertexColors: false
+    }),
+    new THREE.MeshBasicMaterial({
+      color: 16711935,
+      opacity: 0.2,
+      transparent: true,
+      depthWrite: false,
+      vertexColors: false
+    })
+  ]);
+  console.log(highlight);
   highlight.renderOrder = 998;
   scene.add(highlight);
   const particleInfo = utils.readParticleInfo(mod.particle);
@@ -132,14 +142,11 @@ function placePlane(plane, pos, face) {
     return;
   for (let i = 0; i < 6; i++) {
     if (i != face) {
-      plane.geometry.faces[i * 2].color.setHex(65280);
-      plane.geometry.faces[i * 2 + 1].color.setHex(65280);
+      plane.geometry.groups[i].materialIndex = 1;
     } else {
-      plane.geometry.faces[i * 2].color.setHex(16711935);
-      plane.geometry.faces[i * 2 + 1].color.setHex(16711935);
+      plane.geometry.groups[i].materialIndex = 0;
     }
   }
-  plane.geometry.colorsNeedUpdate = true;
 }
 function enterGameMode(f) {
   document.onfullscreenchange = (e) => {

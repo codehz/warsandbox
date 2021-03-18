@@ -1,5 +1,5 @@
-import {Pass as Pass2} from "./Pass.js";
-export class MaskPass extends Pass2 {
+import {Pass} from "./Pass.js";
+export class MaskPass extends Pass {
   constructor(scene, camera) {
     super();
     this.inverse = false;
@@ -39,7 +39,7 @@ export class MaskPass extends Pass2 {
   }
 }
 ;
-export class ClearMaskPass extends Pass2 {
+export class ClearMaskPass extends Pass {
   constructor() {
     super();
     this.needsSwap = false;

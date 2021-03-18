@@ -1,4 +1,4 @@
-import * as THREE from "../web_modules/three.js";
+import * as THREE from "../_snowpack/pkg/three.js";
 export class VoxelTextureManager {
   constructor(base, size) {
     this.count = 0;

@@ -116,7 +116,7 @@ export class KeyboardMapper {
   }
 }
 ;
-class ControlMapper {
+const _ControlMapper = class {
   constructor(addr) {
     this.addr = addr;
   }
@@ -125,36 +125,37 @@ class ControlMapper {
   }
   set move([x, y]) {
     const view = this.view;
-    view.setFloat32(ControlMapper.MOVE_X, x, true);
-    view.setFloat32(ControlMapper.MOVE_Y, y, true);
+    view.setFloat32(_ControlMapper.MOVE_X, x, true);
+    view.setFloat32(_ControlMapper.MOVE_Y, y, true);
   }
   set rotate([x, y]) {
     const view = this.view;
-    view.setFloat32(ControlMapper.ROTATE_X, view.getFloat32(ControlMapper.ROTATE_X, true) + x, true);
-    view.setFloat32(ControlMapper.ROTATE_Y, view.getFloat32(ControlMapper.ROTATE_Y, true) + y, true);
+    view.setFloat32(_ControlMapper.ROTATE_X, view.getFloat32(_ControlMapper.ROTATE_X, true) + x, true);
+    view.setFloat32(_ControlMapper.ROTATE_Y, view.getFloat32(_ControlMapper.ROTATE_Y, true) + y, true);
   }
   set jump(val) {
-    this.view.setUint8(ControlMapper.JUMP, val ? 1 : 0);
+    this.view.setUint8(_ControlMapper.JUMP, val ? 1 : 0);
   }
   set sneak(val) {
-    this.view.setUint8(ControlMapper.SNEAK, val ? 1 : 0);
+    this.view.setUint8(_ControlMapper.SNEAK, val ? 1 : 0);
   }
   set boost(val) {
-    this.view.setUint8(ControlMapper.BOOST, val ? 1 : 0);
+    this.view.setUint8(_ControlMapper.BOOST, val ? 1 : 0);
   }
   set use1(val) {
-    this.view.setUint8(ControlMapper.USE1, val ? 1 : 0);
+    this.view.setUint8(_ControlMapper.USE1, val ? 1 : 0);
   }
   set use2(val) {
-    this.view.setUint8(ControlMapper.USE2, val ? 1 : 0);
+    this.view.setUint8(_ControlMapper.USE2, val ? 1 : 0);
   }
   set use3(val) {
-    this.view.setUint8(ControlMapper.USE3, val ? 1 : 0);
+    this.view.setUint8(_ControlMapper.USE3, val ? 1 : 0);
   }
   set selectedSlot(val) {
-    this.view.setUint8(ControlMapper.SELECTED_SLOT, val);
+    this.view.setUint8(_ControlMapper.SELECTED_SLOT, val);
   }
-}
+};
+let ControlMapper = _ControlMapper;
 ControlMapper.MOVE_X = 0;
 ControlMapper.MOVE_Y = 4;
 ControlMapper.ROTATE_X = 8;

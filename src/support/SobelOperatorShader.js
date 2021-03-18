@@ -1,4 +1,4 @@
-import {Vector2} from "../../web_modules/three.js";
+import {Vector2} from "../../_snowpack/pkg/three.js";
 export const SobelOperatorShader = {
   uniforms: {
     tDiffuse: {value: null},

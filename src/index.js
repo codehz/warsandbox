@@ -1,5 +1,5 @@
-import * as THREE from "../web_modules/three.js";
-import {main as main2} from "./main.js";
+import * as THREE from "../_snowpack/pkg/three.js";
+import {main} from "./main.js";
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
@@ -50,4 +50,4 @@ const adjust = (() => {
     }
   };
 })();
-setTimeout(() => main2(scene, camera, renderer, adjust), 1e3);
+setTimeout(() => main(scene, camera, renderer, adjust), 1e3);

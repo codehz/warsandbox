@@ -1,7 +1,7 @@
-import {WebGLRenderTarget, Clock, LinearFilter, RGBAFormat, Vector2} from "../../web_modules/three.js";
-import {ShaderPass as ShaderPass2} from "./ShaderPass.js";
-import {CopyShader as CopyShader2} from "./CopyShader.js";
-import {MaskPass as MaskPass2, ClearMaskPass} from "./MaskPass.js";
+import {WebGLRenderTarget, Clock, LinearFilter, RGBAFormat, Vector2} from "../../_snowpack/pkg/three.js";
+import {ShaderPass} from "./ShaderPass.js";
+import {CopyShader} from "./CopyShader.js";
+import {MaskPass, ClearMaskPass} from "./MaskPass.js";
 export class EffectComposer {
   constructor(renderer, renderTarget) {
     this.passes = [];
@@ -29,7 +29,7 @@ export class EffectComposer {
     this.writeBuffer = this.renderTarget1;
     this.readBuffer = this.renderTarget2;
     this.renderToScreen = true;
-    this.copyPass = new ShaderPass2(CopyShader2);
+    this.copyPass = new ShaderPass(CopyShader);
     this.clock = new Clock();
   }
   swapBuffers() {
@@ -76,8 +76,8 @@ export class EffectComposer {
         }
         this.swapBuffers();
       }
-      if (MaskPass2 !== void 0) {
-        if (pass instanceof MaskPass2) {
+      if (MaskPass !== void 0) {
+        if (pass instanceof MaskPass) {
           maskActive = true;
         } else if (pass instanceof ClearMaskPass) {
           maskActive = false;

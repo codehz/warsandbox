@@ -1,7 +1,9 @@
-import {Pass as Pass2} from "./Pass.js";
-export class RenderPass extends Pass2 {
+import {Pass} from "./Pass.js";
+import {Color} from "../../_snowpack/pkg/three.js";
+export class RenderPass extends Pass {
   constructor(scene, camera, overrideMaterial, clearColor, clearAlpha = 0) {
     super();
+    this._oldClearColor = new Color();
     this.scene = scene;
     this.camera = camera;
     this.overrideMaterial = overrideMaterial;
@@ -14,13 +16,13 @@ export class RenderPass extends Pass2 {
   render(renderer, _writeBuffer, readBuffer, _deltaTime, _maskActive = false) {
     const oldAutoClear = renderer.autoClear;
     renderer.autoClear = false;
-    let oldClearColor, oldClearAlpha, oldOverrideMaterial;
+    let oldClearAlpha, oldOverrideMaterial;
     if (this.overrideMaterial !== void 0) {
       oldOverrideMaterial = this.scene.overrideMaterial;
       this.scene.overrideMaterial = this.overrideMaterial;
     }
     if (this.clearColor) {
-      oldClearColor = renderer.getClearColor().getHex();
+      renderer.getClearColor(this._oldClearColor);
       oldClearAlpha = renderer.getClearAlpha();
       renderer.setClearColor(this.clearColor, this.clearAlpha);
     }
@@ -32,7 +34,7 @@ export class RenderPass extends Pass2 {
       renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
     renderer.render(this.scene, this.camera);
     if (this.clearColor) {
-      renderer.setClearColor(oldClearColor, oldClearAlpha);
+      renderer.setClearColor(this._oldClearColor, oldClearAlpha);
     }
     if (this.overrideMaterial !== void 0) {
       this.scene.overrideMaterial = oldOverrideMaterial;

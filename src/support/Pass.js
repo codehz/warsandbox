@@ -1,7 +1,7 @@
-import {OrthographicCamera, PlaneBufferGeometry, Mesh} from "../../web_modules/three.js";
-export class FullScreenQuad {
+import {OrthographicCamera, PlaneBufferGeometry, Mesh} from "../../_snowpack/pkg/three.js";
+const _FullScreenQuad = class {
   constructor(mat) {
-    this.mesh = new Mesh(FullScreenQuad.geometry, mat);
+    this.mesh = new Mesh(_FullScreenQuad.geometry, mat);
   }
   get material() {
     return this.mesh.material;
@@ -13,9 +13,10 @@ export class FullScreenQuad {
     this.mesh.geometry.dispose();
   }
   render(renderer) {
-    renderer.render(this.mesh, FullScreenQuad.camera);
+    renderer.render(this.mesh, _FullScreenQuad.camera);
   }
-}
+};
+export let FullScreenQuad = _FullScreenQuad;
 FullScreenQuad.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 FullScreenQuad.geometry = new PlaneBufferGeometry(2, 2);
 ;

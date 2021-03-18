@@ -1,7 +1,7 @@
-import {Pass as Pass2, FullScreenQuad} from "./Pass.js";
-import {ShaderMaterial, UniformsUtils} from "../../web_modules/three.js";
+import {Pass, FullScreenQuad} from "./Pass.js";
+import {ShaderMaterial, UniformsUtils} from "../../_snowpack/pkg/three.js";
 ;
-export class ShaderPass extends Pass2 {
+export class ShaderPass extends Pass {
   constructor(shader, textureID = "tDiffuse") {
     super();
     this.textureID = textureID;
