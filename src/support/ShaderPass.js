@@ -1,1 +1,37 @@
-import{Pass as a,FullScreenQuad as r}from"./Pass.js";import{ShaderMaterial as e,UniformsUtils as f}from"../../web_modules/three.js";export class ShaderPass extends a{constructor(t,s="tDiffuse"){super();this.textureID=s,t instanceof e?(this.uniforms=t.uniforms,this.material=t):t&&(this.uniforms=f.clone(t.uniforms),this.material=new e({defines:Object.assign({},t.defines),uniforms:this.uniforms,vertexShader:t.vertexShader,fragmentShader:t.fragmentShader})),this.fsQuad=new r(this.material)}render(t,s,i,u,l){this.uniforms[this.textureID]&&(this.uniforms[this.textureID].value=i.texture),this.fsQuad.material=this.material,this.renderToScreen?(t.setRenderTarget(null),this.fsQuad.render(t)):(t.setRenderTarget(s),this.clear&&t.clear(t.autoClearColor,t.autoClearDepth,t.autoClearStencil),this.fsQuad.render(t))}}
+import {Pass as Pass2, FullScreenQuad} from "./Pass.js";
+import {ShaderMaterial, UniformsUtils} from "../../web_modules/three.js";
+;
+export class ShaderPass extends Pass2 {
+  constructor(shader, textureID = "tDiffuse") {
+    super();
+    this.textureID = textureID;
+    if (shader instanceof ShaderMaterial) {
+      this.uniforms = shader.uniforms;
+      this.material = shader;
+    } else if (shader) {
+      this.uniforms = UniformsUtils.clone(shader.uniforms);
+      this.material = new ShaderMaterial({
+        defines: Object.assign({}, shader.defines),
+        uniforms: this.uniforms,
+        vertexShader: shader.vertexShader,
+        fragmentShader: shader.fragmentShader
+      });
+    }
+    this.fsQuad = new FullScreenQuad(this.material);
+  }
+  render(renderer, writeBuffer, readBuffer, _deltaTime, _maskActive) {
+    if (this.uniforms[this.textureID]) {
+      this.uniforms[this.textureID].value = readBuffer.texture;
+    }
+    this.fsQuad.material = this.material;
+    if (this.renderToScreen) {
+      renderer.setRenderTarget(null);
+      this.fsQuad.render(renderer);
+    } else {
+      renderer.setRenderTarget(writeBuffer);
+      if (this.clear)
+        renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+      this.fsQuad.render(renderer);
+    }
+  }
+}

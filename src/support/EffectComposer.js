@@ -1,1 +1,118 @@
-import{WebGLRenderTarget as p,Clock as l,LinearFilter as f,RGBAFormat as g,Vector2 as d}from"../../web_modules/three.js";import{ShaderPass as u}from"./ShaderPass.js";import{CopyShader as w}from"./CopyShader.js";import{MaskPass as o,ClearMaskPass as R}from"./MaskPass.js";export class EffectComposer{constructor(e,i){if(this.passes=[],this.renderer=e,i===void 0){var s={minFilter:f,magFilter:f,format:g},t=e.getSize(new d());this.pixelRatio=e.getPixelRatio(),this.width=t.width,this.height=t.height,i=new p(this.width*this.pixelRatio,this.height*this.pixelRatio,s),i.texture.name="EffectComposer.rt1"}else this.pixelRatio=1,this.width=i.width,this.height=i.height;this.renderTarget1=i,this.renderTarget2=i.clone(),this.renderTarget2.texture.name="EffectComposer.rt2",this.writeBuffer=this.renderTarget1,this.readBuffer=this.renderTarget2,this.renderToScreen=!0,this.copyPass=new u(w),this.clock=new l()}swapBuffers(){var e=this.readBuffer;this.readBuffer=this.writeBuffer,this.writeBuffer=e}addPass(e){this.passes.push(e),e.setSize(this.width*this.pixelRatio,this.height*this.pixelRatio)}insertPass(e,i){this.passes.splice(i,0,e),e.setSize(this.width*this.pixelRatio,this.height*this.pixelRatio)}isLastEnabledPass(e){for(var i=e+1;i<this.passes.length;i++)if(this.passes[i].enabled)return!1;return!0}render(e){e===void 0&&(e=this.clock.getDelta());var i=this.renderer.getRenderTarget(),s=!1,t,r,n=this.passes.length;for(r=0;r<n;r++){if(t=this.passes[r],t.enabled===!1)continue;if(t.renderToScreen=this.renderToScreen&&this.isLastEnabledPass(r),t.render(this.renderer,this.writeBuffer,this.readBuffer,e,s),t.needsSwap){if(s){var h=this.renderer.getContext(),a=this.renderer.state.buffers.stencil;a.setFunc(h.NOTEQUAL,1,4294967295),this.copyPass.render(this.renderer,this.writeBuffer,this.readBuffer,e),a.setFunc(h.EQUAL,1,4294967295)}this.swapBuffers()}o!==void 0&&(t instanceof o?s=!0:t instanceof R&&(s=!1))}this.renderer.setRenderTarget(i)}reset(e){if(e===void 0){var i=this.renderer.getSize(new d());this.pixelRatio=this.renderer.getPixelRatio(),this.width=i.width,this.height=i.height,e=this.renderTarget1.clone(),e.setSize(this.width*this.pixelRatio,this.height*this.pixelRatio)}this.renderTarget1.dispose(),this.renderTarget2.dispose(),this.renderTarget1=e,this.renderTarget2=e.clone(),this.writeBuffer=this.renderTarget1,this.readBuffer=this.renderTarget2}setSize(e,i){this.width=e,this.height=i;var s=this.width*this.pixelRatio,t=this.height*this.pixelRatio;this.renderTarget1.setSize(s,t),this.renderTarget2.setSize(s,t),this.passes.forEach(r=>r.setSize(s,t))}setPixelRatio(e){this.pixelRatio=e,this.setSize(this.width,this.height)}}
+import {WebGLRenderTarget, Clock, LinearFilter, RGBAFormat, Vector2} from "../../web_modules/three.js";
+import {ShaderPass as ShaderPass2} from "./ShaderPass.js";
+import {CopyShader as CopyShader2} from "./CopyShader.js";
+import {MaskPass as MaskPass2, ClearMaskPass} from "./MaskPass.js";
+export class EffectComposer {
+  constructor(renderer, renderTarget) {
+    this.passes = [];
+    this.renderer = renderer;
+    if (renderTarget === void 0) {
+      var parameters = {
+        minFilter: LinearFilter,
+        magFilter: LinearFilter,
+        format: RGBAFormat
+      };
+      var size = renderer.getSize(new Vector2());
+      this.pixelRatio = renderer.getPixelRatio();
+      this.width = size.width;
+      this.height = size.height;
+      renderTarget = new WebGLRenderTarget(this.width * this.pixelRatio, this.height * this.pixelRatio, parameters);
+      renderTarget.texture.name = "EffectComposer.rt1";
+    } else {
+      this.pixelRatio = 1;
+      this.width = renderTarget.width;
+      this.height = renderTarget.height;
+    }
+    this.renderTarget1 = renderTarget;
+    this.renderTarget2 = renderTarget.clone();
+    this.renderTarget2.texture.name = "EffectComposer.rt2";
+    this.writeBuffer = this.renderTarget1;
+    this.readBuffer = this.renderTarget2;
+    this.renderToScreen = true;
+    this.copyPass = new ShaderPass2(CopyShader2);
+    this.clock = new Clock();
+  }
+  swapBuffers() {
+    var tmp = this.readBuffer;
+    this.readBuffer = this.writeBuffer;
+    this.writeBuffer = tmp;
+  }
+  addPass(pass) {
+    this.passes.push(pass);
+    pass.setSize(this.width * this.pixelRatio, this.height * this.pixelRatio);
+  }
+  insertPass(pass, index) {
+    this.passes.splice(index, 0, pass);
+    pass.setSize(this.width * this.pixelRatio, this.height * this.pixelRatio);
+  }
+  isLastEnabledPass(passIndex) {
+    for (var i = passIndex + 1; i < this.passes.length; i++) {
+      if (this.passes[i].enabled) {
+        return false;
+      }
+    }
+    return true;
+  }
+  render(deltaTime) {
+    if (deltaTime === void 0) {
+      deltaTime = this.clock.getDelta();
+    }
+    var currentRenderTarget = this.renderer.getRenderTarget();
+    var maskActive = false;
+    var pass, i, il = this.passes.length;
+    for (i = 0; i < il; i++) {
+      pass = this.passes[i];
+      if (pass.enabled === false)
+        continue;
+      pass.renderToScreen = this.renderToScreen && this.isLastEnabledPass(i);
+      pass.render(this.renderer, this.writeBuffer, this.readBuffer, deltaTime, maskActive);
+      if (pass.needsSwap) {
+        if (maskActive) {
+          var context = this.renderer.getContext();
+          var stencil = this.renderer.state.buffers.stencil;
+          stencil.setFunc(context.NOTEQUAL, 1, 4294967295);
+          this.copyPass.render(this.renderer, this.writeBuffer, this.readBuffer, deltaTime);
+          stencil.setFunc(context.EQUAL, 1, 4294967295);
+        }
+        this.swapBuffers();
+      }
+      if (MaskPass2 !== void 0) {
+        if (pass instanceof MaskPass2) {
+          maskActive = true;
+        } else if (pass instanceof ClearMaskPass) {
+          maskActive = false;
+        }
+      }
+    }
+    this.renderer.setRenderTarget(currentRenderTarget);
+  }
+  reset(renderTarget) {
+    if (renderTarget === void 0) {
+      var size = this.renderer.getSize(new Vector2());
+      this.pixelRatio = this.renderer.getPixelRatio();
+      this.width = size.width;
+      this.height = size.height;
+      renderTarget = this.renderTarget1.clone();
+      renderTarget.setSize(this.width * this.pixelRatio, this.height * this.pixelRatio);
+    }
+    this.renderTarget1.dispose();
+    this.renderTarget2.dispose();
+    this.renderTarget1 = renderTarget;
+    this.renderTarget2 = renderTarget.clone();
+    this.writeBuffer = this.renderTarget1;
+    this.readBuffer = this.renderTarget2;
+  }
+  setSize(width, height) {
+    this.width = width;
+    this.height = height;
+    var effectiveWidth = this.width * this.pixelRatio;
+    var effectiveHeight = this.height * this.pixelRatio;
+    this.renderTarget1.setSize(effectiveWidth, effectiveHeight);
+    this.renderTarget2.setSize(effectiveWidth, effectiveHeight);
+    this.passes.forEach((x) => x.setSize(effectiveWidth, effectiveHeight));
+  }
+  setPixelRatio(pixelRatio) {
+    this.pixelRatio = pixelRatio;
+    this.setSize(this.width, this.height);
+  }
+}

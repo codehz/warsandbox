@@ -1,1 +1,27 @@
-import*as i from"../web_modules/three.js";export class VoxelTextureManager{constructor(s,t){this.count=0,this.base=s,this.size=t,this.canvas=new OffscreenCanvas(t*s,t*s),this.ctx=this.canvas.getContext("2d"),this.ctx.fillStyle="#0000FF",this.ctx.fillRect(0,0,t*s,t*s)}async add(s){const t=this.count++,e=new Image(this.size,this.size);return await new Promise((a,n)=>{e.src=s,e.onload=a,e.onerror=n}),this.ctx.drawImage(e,t%this.base*this.size,(t/this.base|0)*this.size,this.size,this.size),t}getTexture(){return console.log(this.canvas),new i.CanvasTexture(this.canvas)}}
+import * as THREE from "../web_modules/three.js";
+export class VoxelTextureManager {
+  constructor(base, size) {
+    this.count = 0;
+    this.base = base;
+    this.size = size;
+    this.canvas = new OffscreenCanvas(size * base, size * base);
+    this.ctx = this.canvas.getContext("2d");
+    this.ctx.fillStyle = "#0000FF";
+    this.ctx.fillRect(0, 0, size * base, size * base);
+  }
+  async add(url) {
+    const id = this.count++;
+    const image = new Image(this.size, this.size);
+    await new Promise((resolve, reject) => {
+      image.src = url;
+      image.onload = resolve;
+      image.onerror = reject;
+    });
+    this.ctx.drawImage(image, id % this.base * this.size, (id / this.base | 0) * this.size, this.size, this.size);
+    return id;
+  }
+  getTexture() {
+    console.log(this.canvas);
+    return new THREE.CanvasTexture(this.canvas);
+  }
+}

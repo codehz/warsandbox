@@ -1,1 +1,42 @@
-import{Pass as c}from"./Pass.js";export class RenderPass extends c{constructor(a,t,e,l,s=0){super();this.scene=a,this.camera=t,this.overrideMaterial=e,this.clearColor=l,this.clearAlpha=s,this.clear=!0,this.clearDepth=!1,this.needsSwap=!1}render(a,t,e,l,s=!1){const h=a.autoClear;a.autoClear=!1;let i,o,r;this.overrideMaterial!==void 0&&(r=this.scene.overrideMaterial,this.scene.overrideMaterial=this.overrideMaterial),this.clearColor&&(i=a.getClearColor().getHex(),o=a.getClearAlpha(),a.setClearColor(this.clearColor,this.clearAlpha)),this.clearDepth&&a.clearDepth(),a.setRenderTarget(this.renderToScreen?null:e),this.clear&&a.clear(a.autoClearColor,a.autoClearDepth,a.autoClearStencil),a.render(this.scene,this.camera),this.clearColor&&a.setClearColor(i,o),this.overrideMaterial!==void 0&&(this.scene.overrideMaterial=r),a.autoClear=h}}
+import {Pass as Pass2} from "./Pass.js";
+export class RenderPass extends Pass2 {
+  constructor(scene, camera, overrideMaterial, clearColor, clearAlpha = 0) {
+    super();
+    this.scene = scene;
+    this.camera = camera;
+    this.overrideMaterial = overrideMaterial;
+    this.clearColor = clearColor;
+    this.clearAlpha = clearAlpha;
+    this.clear = true;
+    this.clearDepth = false;
+    this.needsSwap = false;
+  }
+  render(renderer, _writeBuffer, readBuffer, _deltaTime, _maskActive = false) {
+    const oldAutoClear = renderer.autoClear;
+    renderer.autoClear = false;
+    let oldClearColor, oldClearAlpha, oldOverrideMaterial;
+    if (this.overrideMaterial !== void 0) {
+      oldOverrideMaterial = this.scene.overrideMaterial;
+      this.scene.overrideMaterial = this.overrideMaterial;
+    }
+    if (this.clearColor) {
+      oldClearColor = renderer.getClearColor().getHex();
+      oldClearAlpha = renderer.getClearAlpha();
+      renderer.setClearColor(this.clearColor, this.clearAlpha);
+    }
+    if (this.clearDepth) {
+      renderer.clearDepth();
+    }
+    renderer.setRenderTarget(this.renderToScreen ? null : readBuffer);
+    if (this.clear)
+      renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+    renderer.render(this.scene, this.camera);
+    if (this.clearColor) {
+      renderer.setClearColor(oldClearColor, oldClearAlpha);
+    }
+    if (this.overrideMaterial !== void 0) {
+      this.scene.overrideMaterial = oldOverrideMaterial;
+    }
+    renderer.autoClear = oldAutoClear;
+  }
+}

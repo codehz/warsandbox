@@ -1,1 +1,177 @@
-import*as t from"../web_modules/three.js";import*as n from"./utils.js";import*as o from"./inputmanager.js";import{VoxelTextureManager as P}from"./texture.js";import{createParticleSystem as j}from"./particle.js";export async function main(r,a,l,u){const B=4,w=new P(B,16);await w.add("assets/bedrock.png"),await w.add("assets/test.png");const p=new t.MeshPhongMaterial({map:w.getTexture(),side:t.FrontSide});p.map.minFilter=t.NearestFilter,p.map.magFilter=t.NearestFilter,p.map.flipY=!1,console.time("init");const i=await n.fetchModule("native/engine.wasm",{}),s=n.readMapInfo(i.mapInfo);console.log(s),console.timeLog("init","fetch"),i.loadSampleMap(),console.timeLog("init","load map"),i.initEngine(),console.timeLog("init","init engine"),i.initPlayer(),console.timeLog("init","init player");const I=n.readUint16(i.blockTextureCount),S=n.getUint16BufferFromSlice(i.blockTextureMapping,I*2);for(let e=0;e<I;e++)S[e]=e;n.writeUint16(i.blockTextureBase,B),console.timeEnd("init");const v=new t.Box3(new t.Vector3(0,0,0),new t.Vector3(s.chunkWidth,s.chunkWidth,s.chunkHeight)),W=new t.Sphere(new t.Vector3(s.chunkWidth/2,s.chunkWidth/2,s.chunkHeight/2),((s.chunkWidth/2)**2+(s.chunkWidth/2)**2+(s.chunkHeight/2)**2)**.5);console.time("geo");const F=[];for(let e=0;e<s.length;e++)for(let d=0;d<s.width;d++){const b=i.generateGeomentryDataForChunk(d,e),f=n.readMap(s,b),x=f.data.proxy(new t.InterleavedBuffer(f.data.data,8)),m=new t.BufferGeometry(),L=f.indices.proxy(new t.BufferAttribute(f.indices.data,1));m.setIndex(L),m.setAttribute("position",new t.InterleavedBufferAttribute(x,3,0)),m.setAttribute("normal",new t.InterleavedBufferAttribute(x,3,3)),m.setAttribute("uv",new t.InterleavedBufferAttribute(x,2,6)),m.boundingBox=v,m.boundingSphere=W;const h=new t.Mesh(m,p);h.castShadow=!0,h.receiveShadow=!0,h.position.add(new t.Vector3(d*s.chunkWidth,e*s.chunkWidth,0)),r.add(h),F.push(h);var H=new t.BoxHelper(h,16776960);r.add(H)}console.timeEnd("geo");const y=new t.Mesh(new t.BoxGeometry(1.001,1.001,1.001),new t.MeshBasicMaterial({color:16777215,opacity:.5,transparent:!0,depthWrite:!1,vertexColors:!0}));y.renderOrder=998,r.add(y);const A=n.readParticleInfo(i.particle),E=j(A);r.add(E);let g=!0;setInterval(()=>{if(g)return;i.tick();const e=n.readCameraInfo(i.cameraInfo);C(y,e.highlight,e.selectedFace),M=+new Date()},50),i.tick();let M=+new Date();l.setAnimationLoop(()=>{if(g)return;const e=(+new Date()-M)/50;e>.1&&e<1&&i.microtick(e);const d=n.readCameraInfo(i.cameraInfo);a.position.set(d.pos[0],d.pos[1],d.pos[2]+1.7);const b=d.rot[1],f=d.rot[0];a.rotation.set(Math.PI/2+b,0,f,"YZX"),a.matrixWorldNeedsUpdate=!0,u(),l.render(r,a)});const c=n.getControlMapper(i.control),k=new n.KeyboardMapper(c);o.detect([87,38],e=>k.up=e),o.detect([83,40],e=>k.down=e),o.detect([65,37],e=>k.left=e),o.detect([68,39],e=>k.right=e),o.detect([32],e=>c.jump=e),o.detect([16],e=>c.sneak=e),o.detect([17],e=>c.boost=e),o.detect([0],e=>c.use1=e),o.detect([1],e=>c.use2=e),o.detect([2],e=>c.use3=e),o.detect([49],e=>c.selectedSlot=0),o.detect([50],e=>c.selectedSlot=1),o.detect([51],e=>c.selectedSlot=2),o.detect([52],e=>c.selectedSlot=3),o.detect([53],e=>c.selectedSlot=4),o.detect([54],e=>c.selectedSlot=5),o.detect([55],e=>c.selectedSlot=6),o.detect([56],e=>c.selectedSlot=7),T(e=>g=!e),document.onmousemove=e=>{if(g)return;c.rotate=[-e.movementX/100,-e.movementY/100]}}function C(r,a,l){if(r.position.set(a[0]+.5,a[1]+.5,a[2]+.5),l>5)return;for(let u=0;u<6;u++)u!=l?(r.geometry.faces[u*2].color.setHex(65280),r.geometry.faces[u*2+1].color.setHex(65280)):(r.geometry.faces[u*2].color.setHex(16711935),r.geometry.faces[u*2+1].color.setHex(16711935));r.geometry.colorsNeedUpdate=!0}function T(r){document.onfullscreenchange=l=>{document.fullscreenElement?document.body.requestPointerLock():(r(!1),document.body.onclick=a)},document.onfullscreenerror=l=>{console.warn(l),r(!1)},document.onpointerlockchange=l=>{if(document.pointerLockElement){try{navigator.keyboard.lock()}catch{}r(!0)}else r(!1),document.body.onclick=a};const a=()=>{document.body.onclick=null,document.fullscreenElement?document.body.requestPointerLock():document.body.requestFullscreen({navigationUI:"hide"})};document.body.onclick=a}
+import * as THREE from "../web_modules/three.js";
+import * as utils from "./utils.js";
+import * as input from "./inputmanager.js";
+import {VoxelTextureManager} from "./texture.js";
+import {createParticleSystem} from "./particle.js";
+export async function main(scene, camera, renderer, adjust) {
+  const textbase = 4;
+  const loader = new VoxelTextureManager(textbase, 16);
+  await loader.add("assets/bedrock.png");
+  await loader.add("assets/test.png");
+  const testtex = new THREE.MeshPhongMaterial({
+    map: loader.getTexture(),
+    side: THREE.FrontSide
+  });
+  testtex.map.minFilter = THREE.NearestFilter;
+  testtex.map.magFilter = THREE.NearestFilter;
+  testtex.map.flipY = false;
+  console.time("init");
+  const mod = await utils.fetchModule("native/engine.wasm", {});
+  const mapInfo = utils.readMapInfo(mod.mapInfo);
+  console.log(mapInfo);
+  console.timeLog("init", "fetch");
+  mod.loadSampleMap();
+  console.timeLog("init", "load map");
+  mod.initEngine();
+  console.timeLog("init", "init engine");
+  mod.initPlayer();
+  console.timeLog("init", "init player");
+  const blockTextureCount = utils.readUint16(mod.blockTextureCount);
+  const textmap = utils.getUint16BufferFromSlice(mod.blockTextureMapping, blockTextureCount * 2);
+  for (let i = 0; i < blockTextureCount; i++) {
+    textmap[i] = i;
+  }
+  utils.writeUint16(mod.blockTextureBase, textbase);
+  console.timeEnd("init");
+  const chunkBoundingBox = new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(mapInfo.chunkWidth, mapInfo.chunkWidth, mapInfo.chunkHeight));
+  const chunkBoundingSphere = new THREE.Sphere(new THREE.Vector3(mapInfo.chunkWidth / 2, mapInfo.chunkWidth / 2, mapInfo.chunkHeight / 2), ((mapInfo.chunkWidth / 2) ** 2 + (mapInfo.chunkWidth / 2) ** 2 + (mapInfo.chunkHeight / 2) ** 2) ** 0.5);
+  console.time("geo");
+  const chunkMeshs = [];
+  for (let j = 0; j < mapInfo.length; j++) {
+    for (let i = 0; i < mapInfo.width; i++) {
+      const addr = mod.generateGeomentryDataForChunk(i, j);
+      const exported = utils.readMap(mapInfo, addr);
+      const interleaveBuffer = exported.data.proxy(new THREE.InterleavedBuffer(exported.data.data, 8));
+      const test = new THREE.BufferGeometry();
+      const indexBuffer = exported.indices.proxy(new THREE.BufferAttribute(exported.indices.data, 1));
+      test.setIndex(indexBuffer);
+      test.setAttribute("position", new THREE.InterleavedBufferAttribute(interleaveBuffer, 3, 0));
+      test.setAttribute("normal", new THREE.InterleavedBufferAttribute(interleaveBuffer, 3, 3));
+      test.setAttribute("uv", new THREE.InterleavedBufferAttribute(interleaveBuffer, 2, 6));
+      test.boundingBox = chunkBoundingBox;
+      test.boundingSphere = chunkBoundingSphere;
+      const tmesh = new THREE.Mesh(test, testtex);
+      tmesh.castShadow = true;
+      tmesh.receiveShadow = true;
+      tmesh.position.add(new THREE.Vector3(i * mapInfo.chunkWidth, j * mapInfo.chunkWidth, 0));
+      scene.add(tmesh);
+      chunkMeshs.push(tmesh);
+      var box = new THREE.BoxHelper(tmesh, 16776960);
+      scene.add(box);
+    }
+  }
+  console.timeEnd("geo");
+  const highlight = new THREE.Mesh(new THREE.BoxGeometry(1.001, 1.001, 1.001), new THREE.MeshBasicMaterial({
+    color: 16777215,
+    opacity: 0.5,
+    transparent: true,
+    depthWrite: false,
+    vertexColors: true
+  }));
+  highlight.renderOrder = 998;
+  scene.add(highlight);
+  const particleInfo = utils.readParticleInfo(mod.particle);
+  const particles = createParticleSystem(particleInfo);
+  scene.add(particles);
+  let paused = true;
+  setInterval(() => {
+    if (paused)
+      return;
+    mod.tick();
+    const info = utils.readCameraInfo(mod.cameraInfo);
+    placePlane(highlight, info.highlight, info.selectedFace);
+    ftime = +new Date();
+  }, 50);
+  mod.tick();
+  let ftime = +new Date();
+  renderer.setAnimationLoop(() => {
+    if (paused)
+      return;
+    const delta = (+new Date() - ftime) / 50;
+    if (delta > 0.1 && delta < 1)
+      mod.microtick(delta);
+    const info = utils.readCameraInfo(mod.cameraInfo);
+    camera.position.set(info.pos[0], info.pos[1], info.pos[2] + 1.7);
+    const pitch = info.rot[1];
+    const yaw = info.rot[0];
+    camera.rotation.set(Math.PI / 2 + pitch, 0, yaw, "YZX");
+    camera.matrixWorldNeedsUpdate = true;
+    adjust();
+    renderer.render(scene, camera);
+  });
+  const mgr = utils.getControlMapper(mod.control);
+  const kbdm = new utils.KeyboardMapper(mgr);
+  input.detect([87, 38], (o) => kbdm.up = o);
+  input.detect([83, 40], (o) => kbdm.down = o);
+  input.detect([65, 37], (o) => kbdm.left = o);
+  input.detect([68, 39], (o) => kbdm.right = o);
+  input.detect([32], (o) => mgr.jump = o);
+  input.detect([16], (o) => mgr.sneak = o);
+  input.detect([17], (o) => mgr.boost = o);
+  input.detect([0], (o) => mgr.use1 = o);
+  input.detect([1], (o) => mgr.use2 = o);
+  input.detect([2], (o) => mgr.use3 = o);
+  input.detect([49], (o) => mgr.selectedSlot = 0);
+  input.detect([50], (o) => mgr.selectedSlot = 1);
+  input.detect([51], (o) => mgr.selectedSlot = 2);
+  input.detect([52], (o) => mgr.selectedSlot = 3);
+  input.detect([53], (o) => mgr.selectedSlot = 4);
+  input.detect([54], (o) => mgr.selectedSlot = 5);
+  input.detect([55], (o) => mgr.selectedSlot = 6);
+  input.detect([56], (o) => mgr.selectedSlot = 7);
+  enterGameMode((o) => paused = !o);
+  document.onmousemove = (e) => {
+    if (paused)
+      return;
+    mgr.rotate = [-e.movementX / 100, -e.movementY / 100];
+  };
+}
+function placePlane(plane, pos, face) {
+  plane.position.set(pos[0] + 0.5, pos[1] + 0.5, pos[2] + 0.5);
+  if (face > 5)
+    return;
+  for (let i = 0; i < 6; i++) {
+    if (i != face) {
+      plane.geometry.faces[i * 2].color.setHex(65280);
+      plane.geometry.faces[i * 2 + 1].color.setHex(65280);
+    } else {
+      plane.geometry.faces[i * 2].color.setHex(16711935);
+      plane.geometry.faces[i * 2 + 1].color.setHex(16711935);
+    }
+  }
+  plane.geometry.colorsNeedUpdate = true;
+}
+function enterGameMode(f) {
+  document.onfullscreenchange = (e) => {
+    if (!!document.fullscreenElement) {
+      document.body.requestPointerLock();
+    } else {
+      f(false);
+      document.body.onclick = cb;
+    }
+  };
+  document.onfullscreenerror = (e) => {
+    console.warn(e);
+    f(false);
+  };
+  document.onpointerlockchange = (e) => {
+    if (!!document.pointerLockElement) {
+      try {
+        navigator.keyboard.lock();
+      } catch {
+      }
+      f(true);
+    } else {
+      f(false);
+      document.body.onclick = cb;
+    }
+  };
+  const cb = () => {
+    document.body.onclick = null;
+    if (document.fullscreenElement)
+      document.body.requestPointerLock();
+    else
+      document.body.requestFullscreen({navigationUI: "hide"});
+  };
+  document.body.onclick = cb;
+}

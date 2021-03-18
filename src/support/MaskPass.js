@@ -1,1 +1,51 @@
-import{Pass as c}from"./Pass.js";export class MaskPass extends c{constructor(s,a){super();this.inverse=!1,this.scene=s,this.camera=a,this.clear=!0,this.needsSwap=!0}render(s,a,f,r,l){const t=s.getContext(),e=s.state;e.buffers.color.setMask(!1),e.buffers.depth.setMask(!1),e.buffers.color.setLocked(!0),e.buffers.depth.setLocked(!0);const i=this.inverse?0:1,u=this.inverse?1:0;e.buffers.stencil.setTest(!0),e.buffers.stencil.setOp(t.REPLACE,t.REPLACE,t.REPLACE),e.buffers.stencil.setFunc(t.ALWAYS,i,4294967295),e.buffers.stencil.setClear(u),e.buffers.stencil.setLocked(!0),s.setRenderTarget(f),this.clear&&s.clear(),s.render(this.scene,this.camera),s.setRenderTarget(a),this.clear&&s.clear(),s.render(this.scene,this.camera),e.buffers.color.setLocked(!1),e.buffers.depth.setLocked(!1),e.buffers.stencil.setLocked(!1),e.buffers.stencil.setFunc(t.EQUAL,1,4294967295),e.buffers.stencil.setOp(t.KEEP,t.KEEP,t.KEEP),e.buffers.stencil.setLocked(!0)}}export class ClearMaskPass extends c{constructor(){super();this.needsSwap=!1}render(s,a,f,r,l=!1){s.state.buffers.stencil.setLocked(!1),s.state.buffers.stencil.setTest(!1)}}
+import {Pass as Pass2} from "./Pass.js";
+export class MaskPass extends Pass2 {
+  constructor(scene, camera) {
+    super();
+    this.inverse = false;
+    this.scene = scene;
+    this.camera = camera;
+    this.clear = true;
+    this.needsSwap = true;
+  }
+  render(renderer, writeBuffer, readBuffer, _deltaTime, _maskActive) {
+    const context = renderer.getContext();
+    const state = renderer.state;
+    state.buffers.color.setMask(false);
+    state.buffers.depth.setMask(false);
+    state.buffers.color.setLocked(true);
+    state.buffers.depth.setLocked(true);
+    const writeValue = this.inverse ? 0 : 1;
+    const clearValue = this.inverse ? 1 : 0;
+    state.buffers.stencil.setTest(true);
+    state.buffers.stencil.setOp(context.REPLACE, context.REPLACE, context.REPLACE);
+    state.buffers.stencil.setFunc(context.ALWAYS, writeValue, 4294967295);
+    state.buffers.stencil.setClear(clearValue);
+    state.buffers.stencil.setLocked(true);
+    renderer.setRenderTarget(readBuffer);
+    if (this.clear)
+      renderer.clear();
+    renderer.render(this.scene, this.camera);
+    renderer.setRenderTarget(writeBuffer);
+    if (this.clear)
+      renderer.clear();
+    renderer.render(this.scene, this.camera);
+    state.buffers.color.setLocked(false);
+    state.buffers.depth.setLocked(false);
+    state.buffers.stencil.setLocked(false);
+    state.buffers.stencil.setFunc(context.EQUAL, 1, 4294967295);
+    state.buffers.stencil.setOp(context.KEEP, context.KEEP, context.KEEP);
+    state.buffers.stencil.setLocked(true);
+  }
+}
+;
+export class ClearMaskPass extends Pass2 {
+  constructor() {
+    super();
+    this.needsSwap = false;
+  }
+  render(renderer, _writeBuffer, _readBuffer, _deltaTime, _maskActive = false) {
+    renderer.state.buffers.stencil.setLocked(false);
+    renderer.state.buffers.stencil.setTest(false);
+  }
+}

@@ -1,1 +1,53 @@
-import*as e from"../web_modules/three.js";import{main as s}from"./main.js";const t=new e.WebGLRenderer();t.setSize(window.innerWidth,window.innerHeight),t.shadowMap.enabled=!0,t.shadowMap.type=e.PCFShadowMap,document.body.appendChild(t.domElement);const n=new e.PerspectiveCamera(75,window.innerWidth/window.innerHeight,.1,1e3);n.up=new e.Vector3(0,0,1),n.position.z=12;const i=new e.Scene(),w=16777215,a=new e.DirectionalLight(w,1);a.shadow.mapSize.width=2048,a.shadow.mapSize.height=2048,a.shadow.bias=0,a.shadow.camera.near=0,a.shadow.camera.far=100,a.shadow.camera.left=-50,a.shadow.camera.right=20,a.shadow.camera.top=50,a.shadow.camera.bottom=-50,a.castShadow=!0,a.position.set(0,0,40),a.target.position.set(32,32,0),i.add(a),i.add(a.target),i.add(new e.CameraHelper(a.shadow.camera));const h=new e.AmbientLight(w,.5);i.add(h);var c=new e.BoxGeometry(3,2),m=new e.MeshBasicMaterial({color:65280}),p=new e.Mesh(c,m);i.add(p);var l=new e.AxesHelper(8);i.add(l);const g=(()=>{let o=0,r=0,d=0;return()=>{(o!=window.innerWidth||r!=window.innerHeight||d!=devicePixelRatio)&&(o=window.innerWidth,r=window.innerHeight,d=devicePixelRatio,t.setPixelRatio(d),t.setSize(o,r),n.aspect=o/r,n.updateProjectionMatrix())}})();setTimeout(()=>s(i,n,t,g),1e3);
+import * as THREE from "../web_modules/three.js";
+import {main as main2} from "./main.js";
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+document.body.appendChild(renderer.domElement);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1e3);
+camera.up = new THREE.Vector3(0, 0, 1);
+camera.position.z = 12;
+const scene = new THREE.Scene();
+const color = 16777215;
+const light = new THREE.DirectionalLight(color, 1);
+light.shadow.mapSize.width = 2048;
+light.shadow.mapSize.height = 2048;
+light.shadow.bias = 0;
+light.shadow.camera.near = 0;
+light.shadow.camera.far = 100;
+light.shadow.camera.left = -50;
+light.shadow.camera.right = 20;
+light.shadow.camera.top = 50;
+light.shadow.camera.bottom = -50;
+light.castShadow = true;
+light.position.set(0, 0, 40);
+light.target.position.set(32, 32, 0);
+scene.add(light);
+scene.add(light.target);
+scene.add(new THREE.CameraHelper(light.shadow.camera));
+const amblight = new THREE.AmbientLight(color, 0.5);
+scene.add(amblight);
+var geometry = new THREE.BoxGeometry(3, 2);
+var material = new THREE.MeshBasicMaterial({color: 65280});
+var cube = new THREE.Mesh(geometry, material);
+scene.add(cube);
+var helper = new THREE.AxesHelper(8);
+scene.add(helper);
+const adjust = (() => {
+  let width = 0;
+  let height = 0;
+  let dpi = 0;
+  return () => {
+    if (width != window.innerWidth || height != window.innerHeight || dpi != devicePixelRatio) {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      dpi = devicePixelRatio;
+      renderer.setPixelRatio(dpi);
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+  };
+})();
+setTimeout(() => main2(scene, camera, renderer, adjust), 1e3);

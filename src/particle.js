@@ -1,4 +1,5 @@
-import*as e from"../web_modules/three.js";const a=`
+import * as THREE from "../web_modules/three.js";
+const vertexShader = `
   attribute float size;
   attribute vec3 particleColor;
 
@@ -10,10 +11,27 @@ import*as e from"../web_modules/three.js";const a=`
     gl_PointSize = size * (1400.0 / -mvPosition.z);
     gl_Position = projectionMatrix * mvPosition;
   }
-`,s=`
+`;
+const fragmentShader = `
   varying vec3 vColor;
 
   void main() {
     gl_FragColor = vec4(vColor, 1.0);
   }
-`;export function createParticleSystem(o){const r=o.proxy(new e.InterleavedBuffer(o.data,7)),t=new e.BufferGeometry();t.boundingSphere=new e.Sphere(new e.Vector3(32,512,128),1e3),t.setAttribute("size",new e.InterleavedBufferAttribute(r,1,0)),t.setAttribute("position",new e.InterleavedBufferAttribute(r,3,1)),t.setAttribute("particleColor",new e.InterleavedBufferAttribute(r,3,4));const i=new e.ShaderMaterial({vertexShader:a,fragmentShader:s,transparent:!0,depthWrite:!1}),n=new e.Points(t,i);return n}
+`;
+export function createParticleSystem(data) {
+  const buffer = data.proxy(new THREE.InterleavedBuffer(data.data, 7));
+  const geometry = new THREE.BufferGeometry();
+  geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(32, 512, 128), 1e3);
+  geometry.setAttribute("size", new THREE.InterleavedBufferAttribute(buffer, 1, 0));
+  geometry.setAttribute("position", new THREE.InterleavedBufferAttribute(buffer, 3, 1));
+  geometry.setAttribute("particleColor", new THREE.InterleavedBufferAttribute(buffer, 3, 4));
+  const material = new THREE.ShaderMaterial({
+    vertexShader,
+    fragmentShader,
+    transparent: true,
+    depthWrite: false
+  });
+  const points = new THREE.Points(geometry, material);
+  return points;
+}
