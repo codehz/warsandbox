@@ -8,6 +8,8 @@ export class RenderPass extends Pass {
     clearColor?: Color;
     clearAlpha: number;
     clearDepth: boolean;
+    _oldClearColor: Color = new Color();
+
     constructor(scene: Scene, camera: Camera, overrideMaterial?: Material, clearColor?: Color, clearAlpha: number = 0) {
         super();
         this.scene = scene;
@@ -25,15 +27,14 @@ export class RenderPass extends Pass {
         const oldAutoClear = renderer.autoClear;
         renderer.autoClear = false;
 
-        let oldClearColor: number, oldClearAlpha: number, oldOverrideMaterial: Material;
-
+        let oldClearAlpha: number, oldOverrideMaterial: Material;
         if (this.overrideMaterial !== undefined) {
             oldOverrideMaterial = this.scene.overrideMaterial;
             this.scene.overrideMaterial = this.overrideMaterial;
         }
 
         if (this.clearColor) {
-            oldClearColor = renderer.getClearColor().getHex();
+            renderer.getClearColor(this._oldClearColor);
             oldClearAlpha = renderer.getClearAlpha();
             renderer.setClearColor(this.clearColor, this.clearAlpha);
         }
@@ -49,7 +50,7 @@ export class RenderPass extends Pass {
         renderer.render(this.scene, this.camera);
 
         if (this.clearColor) {
-            renderer.setClearColor(oldClearColor, oldClearAlpha);
+            renderer.setClearColor(this._oldClearColor, oldClearAlpha);
         }
 
         if (this.overrideMaterial !== undefined) {
