@@ -83,13 +83,23 @@ export async function main(
 
     const highlight = new THREE.Mesh(
         new THREE.BoxGeometry(1.001, 1.001, 1.001),
-        new THREE.MeshBasicMaterial({
-            color: 0xFFFFFF,
-            opacity: 0.5,
-            transparent: true,
-            depthWrite: false,
-            vertexColors: true,
-        }));
+        [
+            new THREE.MeshBasicMaterial({
+                color: 0x00FF00,
+                opacity: 0.2,
+                transparent: true,
+                depthWrite: false,
+                vertexColors: false,
+            }),
+            new THREE.MeshBasicMaterial({
+                color: 0xFF00FF,
+                opacity: 0.2,
+                transparent: true,
+                depthWrite: false,
+                vertexColors: false,
+            })
+        ]);
+    console.log(highlight);
     highlight.renderOrder = 998;
     scene.add(highlight);
 
@@ -159,14 +169,16 @@ function placePlane(plane: THREE.Mesh<THREE.BoxGeometry>, pos: [number, number, 
     if (face > 5) return;
     for (let i = 0; i < 6; i++) {
         if (i != face) {
-            plane.geometry.faces[i * 2].color.setHex(0x00FF00);
-            plane.geometry.faces[i * 2 + 1].color.setHex(0x00FF00);
+            plane.geometry.groups[i].materialIndex = 1;
+            // plane.geometry.faces[i * 2].color.setHex(0x00FF00);
+            // plane.geometry.faces[i * 2 + 1].color.setHex(0x00FF00);
         } else {
-            plane.geometry.faces[i * 2].color.setHex(0xFF00FF);
-            plane.geometry.faces[i * 2 + 1].color.setHex(0xFF00FF);
+            plane.geometry.groups[i].materialIndex = 0;
+            // plane.geometry.faces[i * 2].color.setHex(0xFF00FF);
+            // plane.geometry.faces[i * 2 + 1].color.setHex(0xFF00FF);
         }
     }
-    plane.geometry.colorsNeedUpdate = true;
+    // plane.geometry.colorsNeedUpdate = true;
 }
 
 function enterGameMode(f: (f: boolean) => void) {

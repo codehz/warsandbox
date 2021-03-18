@@ -13,6 +13,6 @@ declare interface WasmExport {
     initPlayer(): void;
     tick(): void;
     microtick(offset: number): void;
-    loadSampleMap(): void;
+    loadSampleMap(): boolean;
     generateGeomentryDataForChunk(x: number, y: number): number;
 }
