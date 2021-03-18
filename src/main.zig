@@ -127,12 +127,12 @@ const CameraInfo = extern struct {
 };
 
 fn report(comptime str: []const u8) noreturn {
-    std.log.err("ERROR: {}", .{str});
+    std.log.err("ERROR: {s}", .{str});
     unreachable;
 }
 
 fn reportError(comptime str: []const u8, e: anytype) noreturn {
-    std.log.err("ERROR: {} {}", .{ str, e });
+    std.log.err("ERROR: {s} {}", .{ str, e });
     unreachable;
 }
 

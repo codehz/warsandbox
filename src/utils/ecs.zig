@@ -9,7 +9,13 @@ fn getTypeCount(comptime components: anytype) comptime_int {
             if (str.is_tuple) {
                 return str.fields.len;
             } else {
-                return str.decls.len;
+                var i = 0;
+                inline for (str.decls) |decl| {
+                    if (decl.data == .Type) {
+                        i += 1;
+                    }
+                }
+                return i;
             }
         },
         else => @compileError("not support"),
@@ -26,8 +32,12 @@ fn toTypeArray(comptime components: anytype) [getTypeCount(components)]type {
                     ret[i] = t;
                 }
             } else {
-                inline for (str.decls) |decl, i| {
-                    ret[i] = decl.data.Type;
+                var i = 0;
+                inline for (str.decls) |decl| {
+                    if (decl.data == .Type) {
+                        ret[i] = decl.data.Type;
+                        i += 1;
+                    }
                 }
             }
             return ret;

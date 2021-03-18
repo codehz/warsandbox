@@ -7,6 +7,7 @@ const std = @import("std");
 const assert = std.debug.assert;
 const testing = std.testing;
 const Order = std.math.Order;
+const FieldEnum = std.meta.FieldEnum;
 
 const Color = enum(u1) {
     Black,
@@ -18,7 +19,12 @@ const Black = Color.Black;
 const ReplaceError = error{NotEqual};
 
 pub fn FieldType(comptime Data: type, comptime field: []const u8) type {
-    return std.meta.fieldInfo(Data, field).field_type;
+    inline for (@typeInfo(Data).Struct.fields) |decl| {
+        if (std.mem.eql(u8, decl.name, field)) {
+            return decl.field_type;
+        }
+    }
+    @panic("invalid field " ++ field);
 }
 
 pub fn Node(
@@ -69,8 +75,7 @@ pub fn Node(
                     if (node != p.right)
                         return p;
                     node = p;
-                } else
-                    return null;
+                } else return null;
             }
         }
 
@@ -89,8 +94,7 @@ pub fn Node(
                     if (node != p.left)
                         return p;
                     node = p;
-                } else
-                    return null;
+                } else return null;
             }
         }
         pub fn isRoot(self: *@This()) bool {
@@ -280,8 +284,7 @@ pub fn Tree(
             if (node.left == null and node.right == null) {
                 if (maybe_parent) |parent| {
                     parent.setChild(null, parent.left == node);
-                } else
-                    self.root = null;
+                } else self.root = null;
                 color = node.getColor();
                 newnode = null;
             } else {
@@ -289,13 +292,11 @@ pub fn Tree(
                     next = node.right.?; // Not both null as per above
                 } else if (node.right == null) {
                     next = node.left.?; // Not both null as per above
-                } else
-                    next = node.right.?.getFirst(); // Just checked for null above
+                } else next = node.right.?.getFirst(); // Just checked for null above
 
                 if (maybe_parent) |parent| {
                     parent.setChild(next, parent.left == node);
-                } else
-                    self.root = next;
+                } else self.root = next;
 
                 if (node.left != null and node.right != null) {
                     const left = node.left.?;
@@ -416,8 +417,7 @@ pub fn Tree(
 
             if (old.getParent()) |parent| {
                 parent.setChild(new, parent.left == old);
-            } else
-                self.root = new;
+            } else self.root = new;
 
             if (old.left) |left|
                 left.setParent(new);
