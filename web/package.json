@@ -5,7 +5,7 @@
         "build": "snowpack build"
     },
     "dependencies": {
-        "three": "^0.120.0"
+        "three": "^0.125.0"
     },
     "devDependencies": {
         "snowpack": "^2.16.1",
